@@ -1,0 +1,511 @@
+/* ============================================================
+   STYLE-DESKTOP.CSS — Layout PC para AMÉRICACell Consertos
+   Adicione no index.html APÓS o style.css:
+   <link rel="stylesheet" href="style-desktop.css">
+   ============================================================ */
+
+/* ── Só ativa acima de 768px ─────────────────────────────── */
+@media (min-width: 768px) {
+
+    /* ════════════════════════════════════════════════════════
+       BODY — Layout root: sidebar + conteúdo
+    ════════════════════════════════════════════════════════ */
+    body {
+        display: flex;
+        min-height: 100vh;
+        overflow: hidden; /* o scroll fica dentro das áreas */
+    }
+
+    /* ════════════════════════════════════════════════════════
+       SIDEBAR ESQUERDA — substitui o bottom nav
+    ════════════════════════════════════════════════════════ */
+    #appNav {
+        /* Remove o estilo pill/floating do mobile */
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        transform: none !important;
+        width: 72px !important;
+        border-radius: 0 !important;
+        padding: 20px 0 !important;
+        background: rgba(11, 17, 32, 0.95) !important;
+        border: none !important;
+        border-right: 1px solid rgba(148, 163, 184, 0.1) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        gap: 4px !important;
+        z-index: 1060 !important;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3) !important;
+        overflow: hidden;
+        /* Remove o max-width do mobile */
+        max-width: none !important;
+        width: 72px !important;
+    }
+
+    /* Logo / ícone do app no topo da sidebar */
+    #appNav::before {
+        content: '🔧';
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        width: 72px;
+        height: 52px;
+        flex-shrink: 0;
+        margin-bottom: 8px;
+    }
+
+    /* Botões da sidebar */
+    .ctw-nav-btn {
+        width: 100% !important;
+        border-radius: 0 !important;
+        padding: 14px 0 !important;
+        min-width: unset !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+        border-radius: 12px !important;
+        margin: 0 8px !important;
+        width: calc(100% - 16px) !important;
+        transition: background 0.2s, transform 0.15s !important;
+    }
+
+    .ctw-nav-btn:hover {
+        background: rgba(255, 255, 255, 0.07) !important;
+        transform: none !important;
+    }
+
+    .ctw-nav-btn.ctw-nav-active {
+        background: rgba(var(--primary-color-rgb), 0.18) !important;
+    }
+
+    .ctw-nav-icon {
+        font-size: 1.35rem !important;
+    }
+
+    .ctw-nav-label {
+        font-size: .55rem !important;
+        letter-spacing: .3px !important;
+    }
+
+    /* Divisor entre ícones principais e Config (empurra config pro final) */
+    #navBtnConfig {
+        margin-top: auto !important;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       ÁREA PRINCIPAL — empurra pra direita da sidebar
+    ════════════════════════════════════════════════════════ */
+    .app-screen {
+        margin-left: 72px !important;
+        width: calc(100vw - 72px) !important;
+        max-width: calc(100vw - 72px) !important;
+        padding-bottom: 24px !important;
+        padding-top: 20px !important;
+        padding-left: 28px !important;
+        padding-right: 28px !important;
+        height: 100vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Remove padding bottom do mobile que compensava a nav */
+    #repairsContainer,
+    #vendasScreen {
+        padding-bottom: 24px !important;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       TELA CONSERTOS — Layout 2 colunas: sidebar stats + main
+    ════════════════════════════════════════════════════════ */
+    #repairsContainer {
+        display: grid !important;
+        grid-template-columns: 220px 1fr !important;
+        grid-template-rows: auto auto auto 1fr !important;
+        grid-template-areas:
+            "header  header"
+            "stats   toolbar"
+            "stats   filters"
+            "stats   list" !important;
+        gap: 0 24px !important;
+        align-items: start !important;
+        max-width: 1400px !important;
+        margin: 0 auto !important;
+    }
+
+    /* Header fica em cima das duas colunas */
+    #repairsContainer .section-header {
+        grid-area: header !important;
+        margin-bottom: 24px !important;
+        border-bottom: 1px solid var(--glass-border) !important;
+        padding-bottom: 14px !important;
+    }
+
+    #repairsContainer .section-header h3 {
+        font-size: 1.6rem !important;
+    }
+
+    /* ── Stats bar vira coluna lateral ── */
+    .rep-stats-bar {
+        grid-area: stats !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        margin-bottom: 0 !important;
+        position: sticky !important;
+        top: 0 !important;
+    }
+
+    .rep-stat {
+        border-radius: 14px !important;
+        padding: 14px 16px !important;
+        text-align: left !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        cursor: pointer !important;
+        transition: all .18s !important;
+        border-top: none !important;
+        border-left: 3px solid transparent !important;
+    }
+
+    /* Colore a borda esquerda usando o mesmo estilo que era border-top */
+    .rep-stat[style*="border-top:2px solid var(--rep-purple)"] {
+        border-left-color: var(--rep-purple) !important;
+        border-top: none !important;
+    }
+    .rep-stat[style*="border-top:2px solid var(--rep-yellow)"] {
+        border-left-color: var(--rep-yellow) !important;
+        border-top: none !important;
+    }
+    .rep-stat[style*="border-top:2px solid var(--rep-blue)"] {
+        border-left-color: var(--rep-blue) !important;
+        border-top: none !important;
+    }
+    .rep-stat[style*="border-top:2px solid var(--rep-green)"] {
+        border-left-color: var(--rep-green) !important;
+        border-top: none !important;
+    }
+    .rep-stat[style*="border-top:2px solid var(--rep-orange)"] {
+        border-left-color: var(--rep-orange) !important;
+        border-top: none !important;
+    }
+    .rep-stat[style*="border-top:2px solid #ef4444"] {
+        border-left-color: #ef4444 !important;
+        border-top: none !important;
+    }
+
+    .rep-stat-clickable:hover {
+        background: rgba(var(--primary-color-rgb), .1) !important;
+        transform: translateX(3px) !important;
+    }
+
+    .rep-stat-num {
+        font-size: 1.5rem !important;
+        flex-shrink: 0 !important;
+        min-width: 32px !important;
+    }
+
+    .rep-stat-lbl {
+        font-size: .72rem !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        line-height: 1.3 !important;
+        flex: 1 !important;
+    }
+
+    /* Bloco urgente no layout lateral */
+    .rep-stat-urgente {
+        flex-direction: row !important;
+        align-items: center !important;
+    }
+
+    .rep-stat-urgente-row {
+        flex-direction: column !important;
+        gap: 1px !important;
+        align-items: flex-start !important;
+        min-width: 32px !important;
+    }
+
+    .rep-stat-urgente-num {
+        font-size: 1.1rem !important;
+    }
+
+    /* ── Toolbar ── */
+    .rep-toolbar {
+        grid-area: toolbar !important;
+        margin-bottom: 10px !important;
+        gap: 12px !important;
+    }
+
+    .rep-search-input {
+        font-size: .88rem !important;
+        padding: 11px 14px 11px 38px !important;
+    }
+
+    /* Chips de tipo (Final/Lojista) — sempre visível no PC */
+    #repSearchTypeChips {
+        display: flex !important;
+        margin-bottom: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    /* ── Filters ── */
+    .rep-filters {
+        grid-area: filters !important;
+        margin-bottom: 14px !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+
+    .rep-filter-btn {
+        font-size: .75rem !important;
+        padding: 7px 16px !important;
+    }
+
+    /* ── Lista de cards ── */
+    #repairsList {
+        grid-area: list !important;
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 14px !important;
+        align-items: start !important;
+    }
+
+    /* Cards maiores com hover bonito */
+    .rep-card {
+        border-radius: 16px !important;
+        transition: box-shadow .2s, transform .2s !important;
+    }
+
+    .rep-card:hover {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    /* Empty state ocupa as 2 colunas */
+    .rep-empty {
+        grid-column: 1 / -1 !important;
+        padding: 64px 20px !important;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       TELA VENDAS — centralizada com max-width
+    ════════════════════════════════════════════════════════ */
+    #vendasScreen {
+        max-width: 680px !important;
+        margin: 0 auto !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        padding-top: 28px !important;
+    }
+
+    /* Botões canal lado a lado já estão assim, fica bem no PC */
+    .vd-tabs {
+        gap: 12px !important;
+    }
+
+    .vd-tab {
+        font-size: .85rem !important;
+        padding: 11px 0 !important;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       TELA CONFIG — duas colunas
+    ════════════════════════════════════════════════════════ */
+    #configScreen {
+        max-width: 1000px !important;
+        margin: 0 auto !important;
+        padding-top: 0 !important;
+    }
+
+    #configScreen .section-header {
+        padding-top: 20px !important;
+    }
+
+    /* Barra de tabs da config */
+    .cfg-tabs-bar {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+        background: var(--bg-color) !important;
+        padding: 12px 16px !important;
+        margin-bottom: 4px !important;
+        border-bottom: 1px solid var(--glass-border) !important;
+        display: flex !important;
+        gap: 8px !important;
+    }
+
+    .cfg-tab-btn {
+        font-size: .82rem !important;
+        padding: 9px 20px !important;
+    }
+
+    /* Painel da config em grid 2 colunas quando possível */
+    .cfg-tab-panel {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0 24px !important;
+        padding: 20px 16px 24px !important;
+        align-items: start !important;
+    }
+
+    /* Blocos que devem ocupar largura total */
+    .cfg-block:last-child,
+    .cfg-block.cfg-block-full {
+        grid-column: 1 / -1 !important;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       TELA FINANCEIRO — centralizada
+    ════════════════════════════════════════════════════════ */
+    #financeiroScreen {
+        max-width: 1100px !important;
+        margin: 0 auto !important;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       MODAIS — centralizados no PC (não mais bottom sheet)
+    ════════════════════════════════════════════════════════ */
+    .rep-modal-overlay {
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 24px !important;
+    }
+
+    .rep-modal {
+        border-radius: 20px !important;
+        max-height: 88vh !important;
+        max-width: 560px !important;
+        width: 100% !important;
+        animation: modal-in-desktop .25s cubic-bezier(.2, .8, .2, 1) !important;
+    }
+
+    .rep-modal-sm {
+        max-height: 70vh !important;
+        border-radius: 20px !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 420px !important;
+    }
+
+    @keyframes modal-in-desktop {
+        from { transform: scale(0.95) translateY(8px); opacity: 0; }
+        to   { transform: scale(1)    translateY(0);   opacity: 1; }
+    }
+
+    /* ════════════════════════════════════════════════════════
+       SHEETS (perfil, notif) — centralizados no PC
+    ════════════════════════════════════════════════════════ */
+    .ps-overlay,
+    .notif-sheet-overlay {
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .ps-sheet,
+    .notif-sheet {
+        margin-bottom: 0 !important;
+        border-radius: 20px !important;
+        transform: scale(0.95) !important;
+        opacity: 0 !important;
+        transition: transform .25s cubic-bezier(.2,.8,.2,1), opacity .2s ease !important;
+    }
+
+    .ps-overlay.active .ps-sheet,
+    .notif-sheet-overlay.active .notif-sheet {
+        transform: scale(1) !important;
+        opacity: 1 !important;
+    }
+
+    .ps-handle,
+    .notif-sheet-handle {
+        display: none !important;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       SPLASH / LOADING — centralizado (já são full-screen, ok)
+    ════════════════════════════════════════════════════════ */
+
+    /* ════════════════════════════════════════════════════════
+       SEÇÃO HEADER (título de tela) — ajuste desktop
+    ════════════════════════════════════════════════════════ */
+    .section-header h3 {
+        font-size: 1.5rem !important;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       FLOATING NOTIFICATIONS — ajuste pra não colidir com sidebar
+    ════════════════════════════════════════════════════════ */
+    #notifFloatingWrap {
+        left: 88px !important;
+        right: 24px !important;
+        max-width: 460px !important;
+        top: 20px !important;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       SCROLLBAR CUSTOMIZADA nas áreas de conteúdo
+    ════════════════════════════════════════════════════════ */
+    .app-screen::-webkit-scrollbar {
+        width: 6px;
+    }
+    .app-screen::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .app-screen::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.2);
+        border-radius: 3px;
+    }
+    .app-screen::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.4);
+    }
+
+    /* ════════════════════════════════════════════════════════
+       LIGHT THEME — ajustes extras desktop
+    ════════════════════════════════════════════════════════ */
+    [data-theme="light"] #appNav {
+        background: rgba(255, 255, 255, 0.95) !important;
+        border-right: 1px solid rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    [data-theme="light"] .rep-stat-clickable:hover {
+        background: rgba(var(--primary-color-rgb), .07) !important;
+    }
+}
+
+/* ── Telas médias: 768px–1100px — 1 coluna no grid de cards ── */
+@media (min-width: 768px) and (max-width: 1100px) {
+    #repairsList {
+        grid-template-columns: 1fr !important;
+    }
+
+    #repairsContainer {
+        grid-template-columns: 180px 1fr !important;
+    }
+
+    .cfg-tab-panel {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ── Telas grandes: acima de 1400px — 3 colunas nos cards ── */
+@media (min-width: 1400px) {
+    #repairsList {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    #appNav {
+        width: 88px !important;
+    }
+
+    .app-screen {
+        margin-left: 88px !important;
+        width: calc(100vw - 88px) !important;
+        max-width: calc(100vw - 88px) !important;
+    }
+}
