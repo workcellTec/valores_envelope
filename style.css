@@ -4069,3 +4069,432 @@ body {
     color: #42a5f5;
     border: 1px solid rgba(33,150,243,.25);
 }
+
+
+/* ============================================================
+   DESKTOP LAYOUT — ≥ 900px
+   ============================================================ */
+@media (min-width: 900px) {
+
+    /* ── body base ── */
+    body {
+        overflow: hidden;
+    }
+
+    /* ══════════════════════════════════════════
+       NAV LATERAL — substitui bottom-nav
+    ══════════════════════════════════════════ */
+    .ctw-bottom-nav {
+        /* Vira sidebar vertical à esquerda */
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        transform: none;
+        width: 72px;
+        height: 100vh;
+        border-radius: 0 20px 20px 0;
+        padding: 28px 0;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 4px;
+        background: rgba(10, 14, 30, 0.92);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: none;
+        border-right: 1px solid rgba(255,255,255,0.07);
+        box-shadow: 4px 0 32px rgba(0,0,0,0.4);
+        z-index: 1060;
+    }
+    [data-theme="light"] .ctw-bottom-nav {
+        background: rgba(255,255,255,0.94);
+        border-right: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 4px 0 24px rgba(0,0,0,0.1);
+    }
+
+    /* Logo/branding topo da sidebar */
+    .ctw-bottom-nav::before {
+        content: '🔧';
+        font-size: 1.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        background: rgba(var(--primary-color-rgb), 0.12);
+        border: 1px solid rgba(var(--primary-color-rgb), 0.25);
+        border-radius: 14px;
+        margin-bottom: 20px;
+    }
+
+    .ctw-nav-btn {
+        width: 52px;
+        height: 52px;
+        min-width: unset;
+        padding: 0;
+        border-radius: 14px;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .ctw-nav-btn:hover {
+        background: rgba(255,255,255,0.08);
+        transform: none;
+    }
+    [data-theme="light"] .ctw-nav-btn:hover {
+        background: rgba(0,0,0,0.06);
+    }
+    .ctw-nav-icon {
+        font-size: 1.2rem;
+    }
+    .ctw-nav-label {
+        font-size: .45rem;
+        letter-spacing: .3px;
+    }
+    .ctw-nav-btn.ctw-nav-active {
+        background: rgba(var(--primary-color-rgb), 0.18);
+        box-shadow: 0 0 0 1px rgba(var(--primary-color-rgb), 0.3);
+    }
+
+    /* ══════════════════════════════════════════
+       LAYOUT PRINCIPAL — área de conteúdo
+    ══════════════════════════════════════════ */
+
+    /* Todas as telas ganham padding-left = largura da sidebar */
+    .app-screen {
+        margin-left: 72px;
+        padding: 28px 32px;
+        padding-bottom: 28px !important;
+        min-height: 100vh;
+        overflow-y: auto;
+        height: 100vh;
+        box-sizing: border-box;
+    }
+
+    #repairsContainer {
+        margin-left: 72px !important;
+        padding: 28px 32px !important;
+        padding-bottom: 28px !important;
+        min-height: 100vh;
+        max-width: 100% !important;
+        height: 100vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+    }
+
+    /* ══════════════════════════════════════════
+       LAYOUT INTERNO — sidebar de stats + lista
+    ══════════════════════════════════════════ */
+    #repairsContainer {
+        display: grid !important;
+        grid-template-columns: 260px 1fr;
+        grid-template-rows: auto 1fr;
+        column-gap: 24px;
+        align-items: start;
+    }
+
+    /* Stats bar: coluna vertical à esquerda */
+    .rep-stats-bar {
+        grid-column: 1;
+        grid-row: 1 / 3;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        position: sticky;
+        top: 0;
+        max-height: calc(100vh - 56px);
+        overflow-y: auto;
+        padding-right: 4px;
+        scrollbar-width: none;
+    }
+    .rep-stats-bar::-webkit-scrollbar { display: none; }
+
+    .rep-stat {
+        padding: 14px 16px;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all .18s;
+    }
+    .rep-stat:hover {
+        border-color: rgba(var(--primary-color-rgb), 0.35);
+        background: rgba(var(--primary-color-rgb), 0.06);
+        transform: translateX(3px);
+    }
+    .rep-stat-num {
+        font-size: 1.6rem;
+        font-weight: 800;
+        min-width: 36px;
+        text-align: center;
+    }
+    .rep-stat-lbl {
+        font-size: .72rem;
+        font-weight: 600;
+        opacity: .75;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+        padding: 0;
+        text-align: left;
+        line-height: 1.3;
+    }
+
+    /* Bloco urgente na sidebar */
+    .rep-stat-urgente {
+        padding: 14px 16px;
+        text-align: left;
+        flex-direction: row;
+        align-items: center;
+    }
+    .rep-stat-urgente-row {
+        justify-content: flex-start;
+        gap: 8px;
+        margin-bottom: 0;
+    }
+    .rep-stat-urgente-num {
+        font-size: 1.6rem;
+        min-width: 36px;
+        text-align: center;
+    }
+
+    /* Coluna direita: toolbar + filtros + lista */
+    .rep-toolbar {
+        grid-column: 2;
+        grid-row: 1;
+        margin-bottom: 14px;
+        gap: 12px;
+    }
+
+    .rep-filters {
+        grid-column: 2;
+        /* filters ficam na toolbar — não ocupa linha própria */
+    }
+
+    /* Lista de cards */
+    #repairsList {
+        grid-column: 2;
+        grid-row: 2;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        align-items: start;
+    }
+
+    /* Botão ver mais ocupa 2 colunas */
+    #repVerMaisWrap {
+        grid-column: 1 / -1;
+    }
+
+    /* Empty state ocupa 2 colunas */
+    .rep-empty {
+        grid-column: 1 / -1;
+    }
+
+    /* Cards no grid */
+    .rep-card {
+        border-radius: 20px;
+        transition: box-shadow .2s, transform .15s;
+    }
+    .rep-card:hover {
+        box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+        transform: translateY(-2px);
+    }
+
+    /* Thumb maior no PC */
+    .rep-thumb-wrap {
+        width: 72px;
+        height: 72px;
+        flex-shrink: 0;
+    }
+    .rep-thumb-wrap .rep-thumb,
+    .rep-thumb-wrap .rep-thumb-placeholder {
+        width: 72px;
+        height: 72px;
+    }
+
+    /* Nome e modelo maiores */
+    .rep-card-name {
+        font-size: 1rem;
+        font-weight: 700;
+    }
+    .rep-card-model {
+        font-size: .72rem;
+    }
+
+    /* Toolbar search maior */
+    .rep-search-input {
+        font-size: .9rem;
+        padding: 11px 14px 11px 38px;
+        border-radius: 14px;
+    }
+
+    /* Filtros com font maior */
+    .rep-filter-btn {
+        font-size: .75rem;
+        padding: 7px 16px;
+    }
+
+    /* Botão + Novo mais destacado */
+    #repNewBtn {
+        padding: 10px 22px;
+        font-size: .88rem;
+        border-radius: 14px;
+        white-space: nowrap;
+    }
+
+    /* ══════════════════════════════════════════
+       MODAIS — centralizados, não bottom-sheet
+    ══════════════════════════════════════════ */
+    .rep-modal-overlay {
+        align-items: center;
+        padding: 24px;
+    }
+    .rep-modal {
+        border-radius: 24px;
+        max-height: min(88vh, 88dvh);
+        animation: rep-modal-center-in .25s cubic-bezier(.2,.8,.2,1);
+    }
+    @keyframes rep-modal-center-in {
+        from { transform: translateY(16px) scale(.97); opacity: 0; }
+        to   { transform: translateY(0)    scale(1);   opacity: 1; }
+    }
+
+    /* Form overlay (cadastro/edição) */
+    #repFormOverlay {
+        align-items: center;
+        padding: 24px;
+    }
+    #repFormOverlay .rep-modal {
+        max-width: 600px;
+        border-radius: 24px;
+    }
+
+    /* Step / checklist modais */
+    #repStepOverlay,
+    #repChecklistOverlay,
+    #repGarantiaOverlay,
+    #repAnotacaoOverlay,
+    #repFornecedorOverlay,
+    #repChooseStepOverlay,
+    #repUndoOverlay,
+    #repConfirmOverlay {
+        align-items: center;
+        padding: 24px;
+    }
+    #repStepOverlay .rep-modal,
+    #repChecklistOverlay .rep-modal,
+    #repGarantiaOverlay .rep-modal,
+    #repAnotacaoOverlay .rep-modal,
+    #repFornecedorOverlay .rep-modal,
+    #repChooseStepOverlay .rep-modal,
+    #repUndoOverlay .rep-modal,
+    #repConfirmOverlay .rep-modal {
+        border-radius: 24px;
+    }
+
+    /* ══════════════════════════════════════════
+       ALERTAS / NOTIFICAÇÕES — painel lateral
+    ══════════════════════════════════════════ */
+    #alertasContainer,
+    #financeiroContainer,
+    #configContainer {
+        margin-left: 72px !important;
+        padding: 28px 32px !important;
+        padding-bottom: 28px !important;
+        min-height: 100vh;
+        height: 100vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+        max-width: 100% !important;
+    }
+
+    /* ══════════════════════════════════════════
+       FINANCEIRO — layout 2 colunas
+    ══════════════════════════════════════════ */
+    .fin-nav-row {
+        gap: 12px;
+    }
+    .fin-nav-row .fin-tab-btn {
+        font-size: .8rem;
+        padding: 9px 20px;
+    }
+
+    /* ══════════════════════════════════════════
+       SCROLLBAR CUSTOM — tela toda
+    ══════════════════════════════════════════ */
+    #repairsContainer::-webkit-scrollbar,
+    .app-screen::-webkit-scrollbar {
+        width: 5px;
+    }
+    #repairsContainer::-webkit-scrollbar-track,
+    .app-screen::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    #repairsContainer::-webkit-scrollbar-thumb,
+    .app-screen::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.12);
+        border-radius: 999px;
+    }
+    [data-theme="light"] #repairsContainer::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.12);
+    }
+
+    /* ══════════════════════════════════════════
+       BANNER BOTTOM (recibo, licença) — reposicionar
+    ══════════════════════════════════════════ */
+    #repReceiptBanner {
+        left: 72px;
+        right: 0;
+        bottom: 0;
+        padding: 0 32px 24px;
+    }
+    #_licencaBanner {
+        margin-left: 72px;
+    }
+
+    /* ══════════════════════════════════════════
+       CONFIG — 2 colunas
+    ══════════════════════════════════════════ */
+    .cfg-section-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+}
+
+/* ── Telas muito largas: mais espaço ──────────── */
+@media (min-width: 1280px) {
+    #repairsContainer {
+        grid-template-columns: 280px 1fr;
+        column-gap: 32px;
+        padding: 32px 40px !important;
+    }
+    #repairsContainer,
+    #alertasContainer,
+    #financeiroContainer,
+    #configContainer {
+        padding: 32px 40px !important;
+    }
+    .rep-stat-num { font-size: 1.8rem; }
+    .rep-stat-lbl { font-size: .75rem; }
+    .rep-card-name { font-size: 1.05rem; }
+    #repairsList {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+}
+
+/* ── Telas ultra largas: 3 colunas de cards ── */
+@media (min-width: 1600px) {
+    #repairsContainer {
+        grid-template-columns: 300px 1fr;
+        column-gap: 40px;
+        padding: 36px 48px !important;
+    }
+    #repairsList {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
