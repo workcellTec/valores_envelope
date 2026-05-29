@@ -1,35 +1,32 @@
 /* ============================================================
    STYLE-DESKTOP.CSS — Layout PC para AMÉRICACell Consertos
-   Adicione no index.html APÓS o style.css:
-   <link rel="stylesheet" href="style-desktop.css">
    ============================================================ */
 
-/* ── Só ativa acima de 768px ─────────────────────────────── */
 @media (min-width: 768px) {
 
     /* ════════════════════════════════════════════════════════
-       BODY — Layout root: sidebar + conteúdo
+       BODY
     ════════════════════════════════════════════════════════ */
     body {
         display: flex;
         min-height: 100vh;
-        overflow: hidden; /* o scroll fica dentro das áreas */
+        overflow: hidden;
     }
 
     /* ════════════════════════════════════════════════════════
-       SIDEBAR ESQUERDA — substitui o bottom nav
+       SIDEBAR — substitui bottom nav
     ════════════════════════════════════════════════════════ */
     #appNav {
-        /* Remove o estilo pill/floating do mobile */
         position: fixed !important;
         left: 0 !important;
         top: 0 !important;
         bottom: 0 !important;
         transform: none !important;
         width: 72px !important;
+        max-width: none !important;
         border-radius: 0 !important;
         padding: 20px 0 !important;
-        background: rgba(11, 17, 32, 0.95) !important;
+        background: rgba(11, 17, 32, 0.97) !important;
         border: none !important;
         border-right: 1px solid rgba(148, 163, 184, 0.1) !important;
         backdrop-filter: blur(20px) !important;
@@ -39,13 +36,9 @@
         gap: 4px !important;
         z-index: 1060 !important;
         box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3) !important;
-        overflow: hidden;
-        /* Remove o max-width do mobile */
-        max-width: none !important;
-        width: 72px !important;
+        overflow: hidden !important;
     }
 
-    /* Logo / ícone do app no topo da sidebar */
     #appNav::before {
         content: '🔧';
         display: flex;
@@ -58,18 +51,15 @@
         margin-bottom: 8px;
     }
 
-    /* Botões da sidebar */
     .ctw-nav-btn {
-        width: 100% !important;
-        border-radius: 0 !important;
+        width: calc(100% - 16px) !important;
+        border-radius: 12px !important;
         padding: 14px 0 !important;
         min-width: unset !important;
         flex-direction: column !important;
         gap: 4px !important;
-        border-radius: 12px !important;
         margin: 0 8px !important;
-        width: calc(100% - 16px) !important;
-        transition: background 0.2s, transform 0.15s !important;
+        transition: background 0.2s !important;
     }
 
     .ctw-nav-btn:hover {
@@ -81,22 +71,23 @@
         background: rgba(var(--primary-color-rgb), 0.18) !important;
     }
 
-    .ctw-nav-icon {
-        font-size: 1.35rem !important;
-    }
+    .ctw-nav-icon { font-size: 1.35rem !important; }
 
     .ctw-nav-label {
         font-size: .55rem !important;
         letter-spacing: .3px !important;
     }
 
-    /* Divisor entre ícones principais e Config (empurra config pro final) */
-    #navBtnConfig {
-        margin-top: auto !important;
+    #navBtnConfig { margin-top: auto !important; }
+
+    [data-theme="light"] #appNav {
+        background: rgba(255, 255, 255, 0.97) !important;
+        border-right: 1px solid rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08) !important;
     }
 
     /* ════════════════════════════════════════════════════════
-       ÁREA PRINCIPAL — empurra pra direita da sidebar
+       ÁREA PRINCIPAL
     ════════════════════════════════════════════════════════ */
     .app-screen {
         margin-left: 72px !important;
@@ -111,19 +102,18 @@
         overflow-x: hidden !important;
     }
 
-    /* Remove padding bottom do mobile que compensava a nav */
     #repairsContainer,
     #vendasScreen {
         padding-bottom: 24px !important;
     }
 
     /* ════════════════════════════════════════════════════════
-       TELA CONSERTOS — Layout 2 colunas: sidebar stats + main
+       TELA CONSERTOS — grid stats lateral + main
     ════════════════════════════════════════════════════════ */
     #repairsContainer {
         display: grid !important;
         grid-template-columns: 220px 1fr !important;
-        grid-template-rows: auto auto auto 1fr !important;
+        grid-template-rows: auto auto auto auto 1fr !important;
         grid-template-areas:
             "header  header"
             "stats   toolbar"
@@ -135,7 +125,6 @@
         margin: 0 auto !important;
     }
 
-    /* Header fica em cima das duas colunas */
     #repairsContainer .section-header {
         grid-area: header !important;
         margin-bottom: 24px !important;
@@ -143,11 +132,9 @@
         padding-bottom: 14px !important;
     }
 
-    #repairsContainer .section-header h3 {
-        font-size: 1.6rem !important;
-    }
+    #repairsContainer .section-header h3 { font-size: 1.6rem !important; }
 
-    /* ── Stats bar vira coluna lateral ── */
+    /* Stats lateral */
     .rep-stats-bar {
         grid-area: stats !important;
         display: flex !important;
@@ -171,35 +158,20 @@
         border-left: 3px solid transparent !important;
     }
 
-    /* Colore a borda esquerda usando o mesmo estilo que era border-top */
-    .rep-stat[style*="border-top:2px solid var(--rep-purple)"] {
-        border-left-color: var(--rep-purple) !important;
-        border-top: none !important;
-    }
-    .rep-stat[style*="border-top:2px solid var(--rep-yellow)"] {
-        border-left-color: var(--rep-yellow) !important;
-        border-top: none !important;
-    }
-    .rep-stat[style*="border-top:2px solid var(--rep-blue)"] {
-        border-left-color: var(--rep-blue) !important;
-        border-top: none !important;
-    }
-    .rep-stat[style*="border-top:2px solid var(--rep-green)"] {
-        border-left-color: var(--rep-green) !important;
-        border-top: none !important;
-    }
-    .rep-stat[style*="border-top:2px solid var(--rep-orange)"] {
-        border-left-color: var(--rep-orange) !important;
-        border-top: none !important;
-    }
-    .rep-stat[style*="border-top:2px solid #ef4444"] {
-        border-left-color: #ef4444 !important;
-        border-top: none !important;
-    }
+    .rep-stat[style*="border-top:2px solid var(--rep-purple)"]  { border-left-color: var(--rep-purple) !important;  border-top: none !important; }
+    .rep-stat[style*="border-top:2px solid var(--rep-yellow)"]  { border-left-color: var(--rep-yellow) !important;  border-top: none !important; }
+    .rep-stat[style*="border-top:2px solid var(--rep-blue)"]    { border-left-color: var(--rep-blue) !important;    border-top: none !important; }
+    .rep-stat[style*="border-top:2px solid var(--rep-green)"]   { border-left-color: var(--rep-green) !important;   border-top: none !important; }
+    .rep-stat[style*="border-top:2px solid var(--rep-orange)"]  { border-left-color: var(--rep-orange) !important;  border-top: none !important; }
+    .rep-stat[style*="border-top:2px solid #ef4444"]            { border-left-color: #ef4444 !important;            border-top: none !important; }
 
     .rep-stat-clickable:hover {
         background: rgba(var(--primary-color-rgb), .1) !important;
         transform: translateX(3px) !important;
+    }
+
+    [data-theme="light"] .rep-stat-clickable:hover {
+        background: rgba(var(--primary-color-rgb), .07) !important;
     }
 
     .rep-stat-num {
@@ -217,11 +189,7 @@
         flex: 1 !important;
     }
 
-    /* Bloco urgente no layout lateral */
-    .rep-stat-urgente {
-        flex-direction: row !important;
-        align-items: center !important;
-    }
+    .rep-stat-urgente { flex-direction: row !important; align-items: center !important; }
 
     .rep-stat-urgente-row {
         flex-direction: column !important;
@@ -230,11 +198,9 @@
         min-width: 32px !important;
     }
 
-    .rep-stat-urgente-num {
-        font-size: 1.1rem !important;
-    }
+    .rep-stat-urgente-num { font-size: 1.1rem !important; }
 
-    /* ── Toolbar ── */
+    /* Toolbar */
     .rep-toolbar {
         grid-area: toolbar !important;
         margin-bottom: 10px !important;
@@ -246,14 +212,12 @@
         padding: 11px 14px 11px 38px !important;
     }
 
-    /* Chips de tipo (Final/Lojista) — sempre visível no PC */
+    /* FIX 4 — esconde o bloco de chips Final/Lojista no PC */
     #repSearchTypeChips {
-        display: flex !important;
-        margin-bottom: 0 !important;
-        margin-top: 0 !important;
+        display: none !important;
     }
 
-    /* ── Filters ── */
+    /* Filters */
     .rep-filters {
         grid-area: filters !important;
         margin-bottom: 14px !important;
@@ -266,7 +230,7 @@
         padding: 7px 16px !important;
     }
 
-    /* ── Lista de cards ── */
+    /* Lista de cards */
     #repairsList {
         grid-area: list !important;
         display: grid !important;
@@ -275,7 +239,6 @@
         align-items: start !important;
     }
 
-    /* Cards maiores com hover bonito */
     .rep-card {
         border-radius: 16px !important;
         transition: box-shadow .2s, transform .2s !important;
@@ -286,14 +249,13 @@
         transform: translateY(-2px) !important;
     }
 
-    /* Empty state ocupa as 2 colunas */
     .rep-empty {
         grid-column: 1 / -1 !important;
         padding: 64px 20px !important;
     }
 
     /* ════════════════════════════════════════════════════════
-       TELA VENDAS — centralizada com max-width
+       TELA VENDAS
     ════════════════════════════════════════════════════════ */
     #vendasScreen {
         max-width: 680px !important;
@@ -303,37 +265,109 @@
         padding-top: 28px !important;
     }
 
-    /* Botões canal lado a lado já estão assim, fica bem no PC */
-    .vd-tabs {
-        gap: 12px !important;
-    }
-
-    .vd-tab {
-        font-size: .85rem !important;
-        padding: 11px 0 !important;
-    }
+    .vd-tabs { gap: 12px !important; }
+    .vd-tab  { font-size: .85rem !important; padding: 11px 0 !important; }
 
     /* ════════════════════════════════════════════════════════
-       TELA CONFIG — duas colunas
+       FIX 3 — CONFIG vira painel flutuante sobre o conteúdo
+       Fica como overlay lateral direito, não desloca o layout
     ════════════════════════════════════════════════════════ */
     #configScreen {
-        max-width: 1000px !important;
-        margin: 0 auto !important;
-        padding-top: 0 !important;
+        /* Sai do fluxo normal — flutua como overlay */
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        left: 72px !important;
+        margin: 0 !important;
+        width: auto !important;
+        max-width: none !important;
+        height: 100vh !important;
+        z-index: 1050 !important;
+        /* Visual de painel/drawer */
+        background: rgba(11, 17, 40, 0.96) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        border-left: 1px solid rgba(148, 163, 184, 0.12) !important;
+        box-shadow: -8px 0 48px rgba(0, 0, 0, 0.5) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: 0 !important;
+        padding-bottom: 40px !important;
+        /* Animação de entrada */
+        animation: cfg-panel-in .28s cubic-bezier(.2, .8, .2, 1) both !important;
+        /* Quando não está ativo, fica fora da tela */
+        display: none !important;
     }
 
+    #configScreen.active-screen {
+        display: flex !important;
+    }
+
+    @keyframes cfg-panel-in {
+        from { opacity: 0; transform: translateX(32px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* FIX 1 — Botão de fechar o painel Config no PC */
     #configScreen .section-header {
-        padding-top: 20px !important;
+        padding: 20px 24px 0 !important;
+        border-bottom: none !important;
+        margin-bottom: 4px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
     }
 
-    /* Barra de tabs da config */
+    /* Injeta o botão X via CSS — o JS já tem o navBtnConfig que pode fechar,
+       mas adicionamos um botão visual no header */
+    #configScreen .section-header::after {
+        content: '✕';
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.6);
+        font-size: .85rem;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background .15s, color .15s;
+        pointer-events: none; /* o clique real vem do JS abaixo via overlay */
+    }
+
+    /* Overlay escuro clicável atrás do painel para fechar */
+    #desktopCfgOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        left: 72px;
+        z-index: 1049;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(2px);
+        cursor: pointer;
+        animation: cfg-overlay-in .25s ease both;
+    }
+
+    #desktopCfgOverlay.active {
+        display: block;
+    }
+
+    @keyframes cfg-overlay-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    /* Tabs da config */
     .cfg-tabs-bar {
         position: sticky !important;
         top: 0 !important;
         z-index: 10 !important;
-        background: var(--bg-color) !important;
-        padding: 12px 16px !important;
-        margin-bottom: 4px !important;
+        background: rgba(11, 17, 40, 0.98) !important;
+        padding: 14px 24px !important;
+        margin-bottom: 0 !important;
         border-bottom: 1px solid var(--glass-border) !important;
         display: flex !important;
         gap: 8px !important;
@@ -344,23 +378,57 @@
         padding: 9px 20px !important;
     }
 
-    /* Painel da config em grid 2 colunas quando possível */
+    /* FIX 2 — Painéis da config mais largos (paisagem real) */
     .cfg-tab-panel {
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
-        gap: 0 24px !important;
-        padding: 20px 16px 24px !important;
+        gap: 0 32px !important;
+        padding: 24px 24px 32px !important;
         align-items: start !important;
+        max-width: 1100px !important;
+        margin: 0 auto !important;
     }
 
-    /* Blocos que devem ocupar largura total */
-    .cfg-block:last-child,
-    .cfg-block.cfg-block-full {
+    /* Sections e inputs maiores */
+    .cfg-section {
+        padding: 20px 20px !important;
+    }
+
+    .cfg-block {
+        margin-bottom: 28px !important;
+    }
+
+    .cfg-block-title {
+        font-size: .75rem !important;
+        margin-bottom: 12px !important;
+    }
+
+    /* Inputs mais generosos */
+    .form-control,
+    .form-select {
+        padding: 10px 14px !important;
+        font-size: .9rem !important;
+        border-radius: 10px !important;
+    }
+
+    /* Rep-field label maior */
+    .rep-field label {
+        font-size: .8rem !important;
+        margin-bottom: 6px !important;
+    }
+
+    .rep-btn {
+        font-size: .82rem !important;
+        padding: 9px 16px !important;
+    }
+
+    /* Último bloco ocupa largura total */
+    .cfg-block:last-child {
         grid-column: 1 / -1 !important;
     }
 
     /* ════════════════════════════════════════════════════════
-       TELA FINANCEIRO — centralizada
+       TELA FINANCEIRO
     ════════════════════════════════════════════════════════ */
     #financeiroScreen {
         max-width: 1100px !important;
@@ -368,7 +436,7 @@
     }
 
     /* ════════════════════════════════════════════════════════
-       MODAIS — centralizados no PC (não mais bottom sheet)
+       MODAIS — centralizados
     ════════════════════════════════════════════════════════ */
     .rep-modal-overlay {
         align-items: center !important;
@@ -398,16 +466,14 @@
     }
 
     /* ════════════════════════════════════════════════════════
-       SHEETS (perfil, notif) — centralizados no PC
+       SHEETS (perfil) — centralizados
     ════════════════════════════════════════════════════════ */
-    .ps-overlay,
-    .notif-sheet-overlay {
+    .ps-overlay {
         align-items: center !important;
         justify-content: center !important;
     }
 
-    .ps-sheet,
-    .notif-sheet {
+    .ps-sheet {
         margin-bottom: 0 !important;
         border-radius: 20px !important;
         transform: scale(0.95) !important;
@@ -415,97 +481,107 @@
         transition: transform .25s cubic-bezier(.2,.8,.2,1), opacity .2s ease !important;
     }
 
-    .ps-overlay.active .ps-sheet,
-    .notif-sheet-overlay.active .notif-sheet {
+    .ps-overlay.active .ps-sheet {
         transform: scale(1) !important;
         opacity: 1 !important;
     }
 
-    .ps-handle,
-    .notif-sheet-handle {
-        display: none !important;
-    }
+    .ps-handle { display: none !important; }
 
     /* ════════════════════════════════════════════════════════
-       SPLASH / LOADING — centralizado (já são full-screen, ok)
-    ════════════════════════════════════════════════════════ */
-
-    /* ════════════════════════════════════════════════════════
-       SEÇÃO HEADER (título de tela) — ajuste desktop
-    ════════════════════════════════════════════════════════ */
-    .section-header h3 {
-        font-size: 1.5rem !important;
-    }
-
-    /* ════════════════════════════════════════════════════════
-       FLOATING NOTIFICATIONS — ajuste pra não colidir com sidebar
+       FIX 5 — NOTIFICAÇÕES FLUTUANTES bonitas no PC
     ════════════════════════════════════════════════════════ */
     #notifFloatingWrap {
-        left: 88px !important;
-        right: 24px !important;
-        max-width: 460px !important;
-        top: 20px !important;
+        left: 84px !important;
+        right: auto !important;
+        top: 16px !important;
+        width: 380px !important;
+        max-width: 380px !important;
     }
 
+    .notif-float-card {
+        border-radius: 14px !important;
+        padding: 14px 16px !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0,0,0,.3) !important;
+    }
+
+    /* Sheet de notificações — centralizado no PC */
+    .notif-sheet-overlay {
+        align-items: flex-start !important;
+        justify-content: flex-end !important;
+        padding-top: 60px !important;
+        padding-right: 24px !important;
+    }
+
+    .notif-sheet {
+        width: 380px !important;
+        max-width: 380px !important;
+        border-radius: 18px !important;
+        margin-bottom: 0 !important;
+        transform: translateY(-12px) scale(0.97) !important;
+        opacity: 0 !important;
+        transition: transform .25s cubic-bezier(.2,.8,.2,1), opacity .2s ease !important;
+        max-height: 70vh !important;
+    }
+
+    .notif-sheet-overlay.active .notif-sheet {
+        transform: translateY(0) scale(1) !important;
+        opacity: 1 !important;
+    }
+
+    .notif-sheet-handle { display: none !important; }
+
     /* ════════════════════════════════════════════════════════
-       SCROLLBAR CUSTOMIZADA nas áreas de conteúdo
+       SCROLLBAR
     ════════════════════════════════════════════════════════ */
-    .app-screen::-webkit-scrollbar {
-        width: 6px;
-    }
-    .app-screen::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .app-screen::-webkit-scrollbar-thumb {
+    .app-screen::-webkit-scrollbar,
+    #configScreen::-webkit-scrollbar { width: 6px; }
+
+    .app-screen::-webkit-scrollbar-track,
+    #configScreen::-webkit-scrollbar-track { background: transparent; }
+
+    .app-screen::-webkit-scrollbar-thumb,
+    #configScreen::-webkit-scrollbar-thumb {
         background: rgba(148, 163, 184, 0.2);
         border-radius: 3px;
     }
-    .app-screen::-webkit-scrollbar-thumb:hover {
+
+    .app-screen::-webkit-scrollbar-thumb:hover,
+    #configScreen::-webkit-scrollbar-thumb:hover {
         background: rgba(148, 163, 184, 0.4);
-    }
-
-    /* ════════════════════════════════════════════════════════
-       LIGHT THEME — ajustes extras desktop
-    ════════════════════════════════════════════════════════ */
-    [data-theme="light"] #appNav {
-        background: rgba(255, 255, 255, 0.95) !important;
-        border-right: 1px solid rgba(0, 0, 0, 0.1) !important;
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08) !important;
-    }
-
-    [data-theme="light"] .rep-stat-clickable:hover {
-        background: rgba(var(--primary-color-rgb), .07) !important;
     }
 }
 
-/* ── Telas médias: 768px–1100px — 1 coluna no grid de cards ── */
+/* ── Médio: 768–1100px ── */
 @media (min-width: 768px) and (max-width: 1100px) {
     #repairsList {
         grid-template-columns: 1fr !important;
     }
-
     #repairsContainer {
         grid-template-columns: 180px 1fr !important;
     }
-
     .cfg-tab-panel {
         grid-template-columns: 1fr !important;
     }
 }
 
-/* ── Telas grandes: acima de 1400px — 3 colunas nos cards ── */
+/* ── Grande: acima de 1400px ── */
 @media (min-width: 1400px) {
     #repairsList {
         grid-template-columns: repeat(3, 1fr) !important;
     }
-
     #appNav {
         width: 88px !important;
     }
-
     .app-screen {
         margin-left: 88px !important;
         width: calc(100vw - 88px) !important;
         max-width: calc(100vw - 88px) !important;
+    }
+    #configScreen {
+        left: 88px !important;
+    }
+    #desktopCfgOverlay {
+        left: 88px !important;
     }
 }

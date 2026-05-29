@@ -745,6 +745,7 @@
     </div>
 </div>
 
+<div id="desktopCfgOverlay"></div>
 <nav class="ctw-bottom-nav" id="appNav">
     <button class="ctw-nav-btn ctw-nav-active" id="navBtnHome" title="Início">
         <span class="ctw-nav-icon"><i class="bi bi-house-fill"></i></span>
@@ -4848,6 +4849,63 @@ window._aplicarCargo  = aplicarCargo;
 
 })();
 
+})();
+</script>
+<script>
+(function(){
+  function isDesktop(){ return window.innerWidth >= 768; }
+
+  /* Botão Config da sidebar abre/fecha o painel */
+  var cfgBtn = document.getElementById("navBtnConfig");
+  var cfgScreen = document.getElementById("configScreen");
+  var overlay = document.getElementById("desktopCfgOverlay");
+
+  function openCfg(){
+    if(!isDesktop()) return;
+    cfgScreen.classList.add("active-screen");
+    overlay.classList.add("active");
+    cfgBtn.classList.add("ctw-nav-active");
+  }
+
+  function closeCfg(){
+    if(!isDesktop()) return;
+    cfgScreen.classList.remove("active-screen");
+    overlay.classList.remove("active");
+    cfgBtn.classList.remove("ctw-nav-active");
+  }
+
+  /* Clique no overlay fecha */
+  overlay.addEventListener("click", closeCfg);
+
+  /* ESC fecha */
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && isDesktop()) closeCfg();
+  });
+
+  /* Intercepta o clique no botão Config da sidebar */
+  cfgBtn.addEventListener("click", function(e){
+    if(!isDesktop()) return;
+    e.stopImmediatePropagation();
+    if(cfgScreen.classList.contains("active-screen")){
+      closeCfg();
+    } else {
+      openCfg();
+    }
+  }, true);
+
+  /* Header do configScreen — clique no ::after (botão X) não é possível
+     via CSS puro, então adicionamos um botão real de fechar */
+  var cfgHeader = cfgScreen ? cfgScreen.querySelector(".section-header") : null;
+  if(cfgHeader){
+    var closeBtn = document.createElement("button");
+    closeBtn.innerHTML = "<i class=\"bi bi-x-lg\"></i>";
+    closeBtn.setAttribute("title", "Fechar");
+    closeBtn.style.cssText = "background:rgba(255,255,255,.08);border:none;cursor:pointer;width:36px;height:36px;border-radius:50%;color:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;font-size:.85rem;transition:background .15s;flex-shrink:0;";
+    closeBtn.addEventListener("mouseenter", function(){ this.style.background="rgba(255,255,255,.16)"; });
+    closeBtn.addEventListener("mouseleave", function(){ this.style.background="rgba(255,255,255,.08)"; });
+    closeBtn.addEventListener("click", closeCfg);
+    cfgHeader.appendChild(closeBtn);
+  }
 })();
 </script>
 </body>
