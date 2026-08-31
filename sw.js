@@ -1,4 +1,4 @@
-const CACHE_NAME = "envelopes-v10";
+const CACHE_NAME = "envelopes-v13";
 const ASSETS = [
   "./index.html",
   "./app.js",

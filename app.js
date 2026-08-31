@@ -2,10 +2,10 @@
   "use strict";
 
   var ENVELOPES_BASE = [
-    { id: "urgente", label: "Urgência", icon: "ti-alert-circle", bgIcon: "#3D2A1A", colorLight: "#F0A868", colorStrong: "#E8483C" },
-    { id: "necessidade", label: "Necessidade", icon: "ti-package", bgIcon: "#3A3316", colorLight: "#E0C260", colorStrong: "#C99A2E" },
-    { id: "futuro", label: "Futuro", icon: "ti-hourglass", bgIcon: "#1C2E42", colorLight: "#6FA8E0", colorStrong: "#2F6FB8" },
-    { id: "voce", label: "Você", icon: "ti-heart", bgIcon: "#1E3320", colorLight: "#7AC98A", colorStrong: "#3F9354" },
+    { id: "urgente", label: "Urgência", icon: "ti-alert-circle", bgIcon: "#4A1410", colorLight: "#FF6B5C", colorStrong: "#FF2D2D" },
+    { id: "necessidade", label: "Necessidade", icon: "ti-package", bgIcon: "#3D3300", colorLight: "#FFE066", colorStrong: "#FFD500" },
+    { id: "futuro", label: "Futuro", icon: "ti-hourglass", bgIcon: "#0D2A47", colorLight: "#7AC0FF", colorStrong: "#4DAEFF" },
+    { id: "voce", label: "Você", icon: "ti-heart", bgIcon: "#0F3320", colorLight: "#6BE894", colorStrong: "#3DDC7A" },
     { id: "reserva", label: "Reserva", icon: "ti-pig-money", bgIcon: "#2E2149", colorLight: "#B48CE0", colorStrong: "#8A5FC4", acumula: true }
   ];
 
@@ -113,6 +113,38 @@
     }, 2200);
   }
 
+  function askConfirm(title, body, yesLabel, onYes) {
+    var overlay = document.getElementById("confirm-overlay");
+    var btnYes = document.getElementById("confirm-btn-yes");
+    var btnNo = document.getElementById("confirm-btn-no");
+
+    document.getElementById("confirm-title").textContent = title;
+    document.getElementById("confirm-body").textContent = body;
+    btnYes.textContent = yesLabel;
+
+    function cleanup() {
+      overlay.classList.remove("active");
+      btnYes.removeEventListener("click", onYesClick);
+      btnNo.removeEventListener("click", onNoClick);
+      overlay.removeEventListener("click", onOverlayClick);
+    }
+    function onYesClick() {
+      cleanup();
+      onYes();
+    }
+    function onNoClick() {
+      cleanup();
+    }
+    function onOverlayClick(e) {
+      if (e.target === overlay) cleanup();
+    }
+
+    btnYes.addEventListener("click", onYesClick);
+    btnNo.addEventListener("click", onNoClick);
+    overlay.addEventListener("click", onOverlayClick);
+    overlay.classList.add("active");
+  }
+
   function showSaveError(msg) {
     var el = document.getElementById("save-error");
     if (msg) {
@@ -191,14 +223,21 @@
       btn.className = "queue-remove";
       btn.innerHTML = '<i class="ti ti-x" aria-hidden="true"></i>';
       btn.addEventListener("click", function () {
-        state.items = state.items.filter(function (i) { return i.id !== item.id; });
-        if (!saveItems()) {
-          showSaveError("Não salvou a remoção. Tenta de novo.");
-          return;
-        }
-        showSaveError("");
-        renderQueue();
-        renderHome();
+        askConfirm(
+          "Remover da fila?",
+          "\"" + item.nome + "\" — " + formatBRL(item.valor) + " vai sumir da fila. Não pode ser desfeito.",
+          "Remover",
+          function () {
+            state.items = state.items.filter(function (i) { return i.id !== item.id; });
+            if (!saveItems()) {
+              showSaveError("Não salvou a remoção. Tenta de novo.");
+              return;
+            }
+            showSaveError("");
+            renderQueue();
+            renderHome();
+          }
+        );
       });
 
       right.appendChild(valor);
@@ -721,23 +760,30 @@
         return;
       }
 
-      state.items = data.items;
-      state.history = data.history;
-      state.pcts = data.pcts && typeof data.pcts === "object" ? data.pcts : Object.assign({}, DEFAULT_PCTS);
-      state.reservaTotal = parseFloat(data.reservaTotal) || 0;
+      askConfirm(
+        "Importar este backup?",
+        "Isso substitui sua fila, histórico e configurações atuais pelo conteúdo do arquivo. Não pode ser desfeito.",
+        "Importar",
+        function () {
+          state.items = data.items;
+          state.history = data.history;
+          state.pcts = data.pcts && typeof data.pcts === "object" ? data.pcts : Object.assign({}, DEFAULT_PCTS);
+          state.reservaTotal = parseFloat(data.reservaTotal) || 0;
 
-      var ok = saveItems() && saveHistory() && savePcts() && saveReserva();
-      if (!ok) {
-        showToast("Não consegui salvar o backup importado.");
-        return;
-      }
+          var ok = saveItems() && saveHistory() && savePcts() && saveReserva();
+          if (!ok) {
+            showToast("Não consegui salvar o backup importado.");
+            return;
+          }
 
-      renderQueue();
-      renderReserva();
-      renderLastClose(state.history[state.history.length - 1] || null);
-      renderHistoryList();
-      renderHome();
-      showToast("Backup importado com sucesso.");
+          renderQueue();
+          renderReserva();
+          renderLastClose(state.history[state.history.length - 1] || null);
+          renderHistoryList();
+          renderHome();
+          showToast("Backup importado com sucesso.");
+        }
+      );
     };
     reader.readAsText(file);
   }
