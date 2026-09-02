@@ -79,11 +79,14 @@
     display: flex; justify-content: space-between; align-items: center; padding: 13px 16px;
     background: var(--card); border-radius: 18px; margin: 0 18px 8px; border: 0.5px solid var(--card-border);
   }
+  .queue-item-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer; }
   .queue-icon { width: 34px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .queue-item p:first-child { font-size: 13.5px; color: var(--text-primary); }
   .queue-item p:last-child { font-size: 11px; margin-top: 2px; color: var(--text-muted); }
   .queue-valor { font-family: var(--serif); font-size: 14px; color: var(--text-primary); }
   .queue-remove { background: transparent; border: none; color: var(--text-muted); font-size: 15px; padding: 4px; }
+  .queue-actions { display: flex; align-items: center; gap: 2px; }
+  .queue-edit { background: transparent; border: none; color: var(--text-muted); font-size: 15px; padding: 4px; }
 
   .fab {
     position: fixed; bottom: 24px; right: max(18px, calc(50vw - 240px + 18px));
@@ -102,7 +105,15 @@
     background: var(--bg); width: 100%; max-width: 480px; border-radius: 28px 28px 0 0;
     padding: 20px 18px calc(20px + env(safe-area-inset-bottom)); max-height: 88vh; overflow-y: auto;
   }
-  .confirm-sheet { border-radius: 24px; max-width: 340px; margin: 0 auto; padding: 22px 20px calc(22px + env(safe-area-inset-bottom)); }
+  .confirm-overlay-inner {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65); z-index: 40; display: none;
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .confirm-overlay-inner.active { display: flex; }
+  .confirm-sheet {
+    background: var(--card); border: 0.5px solid var(--card-border); border-radius: 20px;
+    max-width: 320px; width: 100%; padding: 22px 20px;
+  }
   .confirm-title { font-size: 16px; font-weight: 500; color: var(--text-primary); margin: 0 0 8px; }
   .confirm-body { font-size: 13px; color: var(--text-secondary); margin: 0 0 18px; line-height: 1.5; }
   .btn-danger { padding: 12px 18px; border-radius: 14px; border: none; background: var(--danger); color: #2A0000; font-size: 13.5px; font-weight: 500; }
@@ -257,7 +268,7 @@
   <div class="sheet">
     <div class="sheet-header">
       <button class="sheet-close" id="btn-cancel-form" aria-label="Fechar"><i class="ti ti-x" aria-hidden="true"></i></button>
-      <p class="sheet-title">Novo item na fila</p>
+      <p class="sheet-title" id="form-sheet-title">Novo item na fila</p>
     </div>
     <p class="field-label">O que você precisa?</p>
     <input type="text" id="form-nome" class="form-input" placeholder="Remédio de carrapato">
@@ -278,12 +289,12 @@
       <p class="field-label" id="form-parcela-preview" style="margin-top:-8px;"></p>
     </div>
     <p id="form-error" class="error-text" style="display:none;"></p>
-    <button class="btn-accent" id="btn-add-item" style="width:100%;">Adicionar à fila</button>
+    <button class="btn-accent" id="btn-submit-item" style="width:100%;">Adicionar à fila</button>
   </div>
 </div>
 
-<div class="overlay" id="confirm-overlay">
-  <div class="sheet confirm-sheet">
+<div class="confirm-overlay-inner" id="confirm-overlay">
+  <div class="confirm-sheet">
     <p class="confirm-title" id="confirm-title"></p>
     <p class="confirm-body" id="confirm-body"></p>
     <div class="preview-actions">

@@ -184,9 +184,7 @@
       row.style.borderLeft = "4px solid " + stripColor;
 
       var left = document.createElement("div");
-      left.style.display = "flex";
-      left.style.alignItems = "center";
-      left.style.gap = "10px";
+      left.className = "queue-item-info";
 
       var iconWrap = document.createElement("span");
       iconWrap.className = "queue-icon";
@@ -208,6 +206,9 @@
 
       left.appendChild(iconWrap);
       left.appendChild(info);
+      left.addEventListener("click", function () {
+        window.openEditItem(item);
+      });
 
       var right = document.createElement("div");
       right.style.display = "flex";
@@ -217,6 +218,17 @@
       var valor = document.createElement("span");
       valor.className = "queue-valor";
       valor.textContent = formatBRL(item.valor);
+
+      var actions = document.createElement("div");
+      actions.className = "queue-actions";
+
+      var editBtn = document.createElement("button");
+      editBtn.setAttribute("aria-label", "Editar " + item.nome);
+      editBtn.className = "queue-edit";
+      editBtn.innerHTML = '<i class="ti ti-pencil" aria-hidden="true"></i>';
+      editBtn.addEventListener("click", function () {
+        window.openEditItem(item);
+      });
 
       var btn = document.createElement("button");
       btn.setAttribute("aria-label", "Remover " + item.nome);
@@ -240,8 +252,11 @@
         );
       });
 
+      actions.appendChild(editBtn);
+      actions.appendChild(btn);
+
       right.appendChild(valor);
-      right.appendChild(btn);
+      right.appendChild(actions);
 
       row.appendChild(left);
       row.appendChild(right);
@@ -286,17 +301,21 @@
     });
   }
 
+  var editingItemId = null;
+
   function setupFormHandlers() {
     var overlay = document.getElementById("form-overlay");
     var btnShow = document.getElementById("btn-show-form");
-    var btnAdd = document.getElementById("btn-add-item");
+    var btnSubmit = document.getElementById("btn-submit-item");
     var btnCancel = document.getElementById("btn-cancel-form");
     var errEl = document.getElementById("form-error");
     var parcelarToggle = document.getElementById("form-parcelar-toggle");
     var parcelasWrap = document.getElementById("form-parcelas-wrap");
     var parcelasInput = document.getElementById("form-parcelas-max");
     var valorInput = document.getElementById("form-valor");
+    var nomeInput = document.getElementById("form-nome");
     var parcelaPreview = document.getElementById("form-parcela-preview");
+    var sheetTitle = document.getElementById("form-sheet-title");
 
     function updateParcelaPreview() {
       var valor = parseFloat(valorInput.value.replace(",", "."));
@@ -319,16 +338,9 @@
     valorInput.addEventListener("input", updateParcelaPreview);
     parcelasInput.addEventListener("input", updateParcelaPreview);
 
-    btnShow.addEventListener("click", function () {
+    function resetForm() {
       selectedEnvelope = "urgente";
-      renderEnvelopeChips();
-      overlay.classList.add("active");
-    });
-
-    function closeForm() {
-      overlay.classList.remove("active");
-      errEl.style.display = "none";
-      document.getElementById("form-nome").value = "";
+      nomeInput.value = "";
       valorInput.value = "";
       parcelasInput.value = "";
       parcelaPreview.textContent = "";
@@ -336,13 +348,51 @@
       parcelasWrap.style.display = "none";
     }
 
+    btnShow.addEventListener("click", function () {
+      editingItemId = null;
+      sheetTitle.textContent = "Novo item na fila";
+      btnSubmit.textContent = "Adicionar à fila";
+      resetForm();
+      renderEnvelopeChips();
+      overlay.classList.add("active");
+    });
+
+    window.openEditItem = function (item) {
+      editingItemId = item.id;
+      sheetTitle.textContent = "Editar item";
+      btnSubmit.textContent = "Salvar alterações";
+      selectedEnvelope = item.envelope;
+      nomeInput.value = item.nome;
+      valorInput.value = String(item.valor).replace(".", ",");
+      if (item.parcelasMax) {
+        parcelarToggle.setAttribute("aria-pressed", "true");
+        parcelasWrap.style.display = "block";
+        parcelasInput.value = item.parcelasMax;
+      } else {
+        parcelarToggle.setAttribute("aria-pressed", "false");
+        parcelasWrap.style.display = "none";
+        parcelasInput.value = "";
+      }
+      updateParcelaPreview();
+      renderEnvelopeChips();
+      errEl.style.display = "none";
+      overlay.classList.add("active");
+    };
+
+    function closeForm() {
+      overlay.classList.remove("active");
+      errEl.style.display = "none";
+      editingItemId = null;
+      resetForm();
+    }
+
     btnCancel.addEventListener("click", closeForm);
     overlay.addEventListener("click", function (e) {
       if (e.target === overlay) closeForm();
     });
 
-    btnAdd.addEventListener("click", function () {
-      var nome = document.getElementById("form-nome").value.trim();
+    btnSubmit.addEventListener("click", function () {
+      var nome = nomeInput.value.trim();
       var valorRaw = valorInput.value;
       var valor = parseFloat(valorRaw.replace(",", "."));
       var parcelarAtivo = parcelarToggle.getAttribute("aria-pressed") === "true";
@@ -365,19 +415,42 @@
         return;
       }
 
-      state.items.push({
-        id: uid(),
-        nome: nome,
-        envelope: selectedEnvelope,
-        valor: valor,
-        criado: Date.now(),
-        parcelasMax: parcelasMax
-      });
-      if (!saveItems()) {
-        errEl.textContent = "Não salvou. Tenta de novo.";
-        errEl.style.display = "block";
-        state.items.pop();
-        return;
+      if (editingItemId) {
+        var idx = state.items.findIndex(function (i) { return i.id === editingItemId; });
+        if (idx === -1) {
+          errEl.textContent = "Esse item não existe mais.";
+          errEl.style.display = "block";
+          return;
+        }
+        var prevItem = state.items[idx];
+        state.items[idx] = Object.assign({}, prevItem, {
+          nome: nome,
+          envelope: selectedEnvelope,
+          valor: valor,
+          parcelasMax: parcelasMax
+        });
+        if (!saveItems()) {
+          state.items[idx] = prevItem;
+          errEl.textContent = "Não salvou. Tenta de novo.";
+          errEl.style.display = "block";
+          return;
+        }
+        showToast("Item atualizado.");
+      } else {
+        state.items.push({
+          id: uid(),
+          nome: nome,
+          envelope: selectedEnvelope,
+          valor: valor,
+          criado: Date.now(),
+          parcelasMax: parcelasMax
+        });
+        if (!saveItems()) {
+          errEl.textContent = "Não salvou. Tenta de novo.";
+          errEl.style.display = "block";
+          state.items.pop();
+          return;
+        }
       }
 
       renderQueue();
