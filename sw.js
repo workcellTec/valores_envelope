@@ -1,5 +1,5 @@
 // sw.js — só guarda a "casca" do app para abrir mesmo sem internet. Os dados das lojas NUNCA são guardados aqui.
-const CACHE = 'painel-vortex-1.3.0';   // mude junto com VERSAO em config.js
+const CACHE = 'painel-vortex-1.3.1';   // mude junto com VERSAO em config.js
 const CASCA = ['./', 'index.html', 'style.css', 'app.js', 'data.js', 'lib.js', 'config.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

@@ -24,6 +24,7 @@
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { color-scheme: light; }
+html, body { overscroll-behavior-y: none; }   /* sem "puxar para atualizar": parece app, não site */
 body { margin: 0; background: var(--bg); color: var(--ink); font: 500 15px/1.4 'Manrope', system-ui, sans-serif; font-variant-numeric: tabular-nums; }
 button, input, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
