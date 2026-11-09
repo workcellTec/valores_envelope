@@ -17,7 +17,7 @@ const db = {
     gama: { bloqueado: true, vencimento: somaDias(h, 10) },
     velha: { bloqueado: false, vencimento: somaDias(h, -4) },
   },
-  historico: {},
+  historico: { gama: [{ em: 1, tipo: 'bloqueio' }] },
   smart: [{ lojaId: 'sm1', nome: 'Smart Um', bloqueada: false, plano: 'pro', membros: [{ uid: 'u1', nome: 'Ana', email: 'ana@x.com', papel: 'gestor' }] }],
 };
 export const __db = db;
@@ -41,6 +41,10 @@ export async function cadastrarLoja(l) {
   db.registro[l.id] = { nome: l.nome, sistema: 'cell', firebaseConfig: l.firebaseConfig, criadoEm: Date.now() };
 }
 export async function renomearLoja(id, nome) { db.registro[id].nome = nome; }
+export async function excluirLoja(id, senha) {
+  if (senha !== 'ok123') throw Object.assign(new Error('Senha incorreta.'), { code: 'senha' });
+  delete db.registro[id]; delete db.historico[id]; delete db.lic[id];
+}
 export async function arquivarLoja(id, a) { db.registro[id].arquivada = !!a; }
 export async function registrarHistorico(id, e) {
   window.__chamadas.push++;

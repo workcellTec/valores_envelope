@@ -134,6 +134,27 @@ with sync_playwright() as p:
     pg.click('[data-a=restaurar]'); pg.click('.barra a:has-text("Lojas")'); pg.wait_for_selector('.tile')
     ok('Beta Cell' in pg.inner_text('#root'), 'restaurada volta para a lista')
 
+    print('Excluir')
+    pg.goto(URL + '#/loja/gama'); pg.wait_for_selector('.hero')
+    pg.click('[data-a=sheet-excluir]'); pg.wait_for_selector('#senhaExcluir')
+    pg.click('[data-a=ok-excluir]')
+    ok('Digite sua senha' in pg.inner_text('#msg') and 'gama' in pg.evaluate('Object.keys(window.__db.registro)'), 'senha vazia não exclui')
+    pg.fill('#senhaExcluir', 'errada'); pg.click('[data-a=ok-excluir]')
+    pg.wait_for_function("document.querySelector('#msg').textContent.includes('incorreta')")
+    ok('gama' in pg.evaluate('Object.keys(window.__db.registro)'), 'senha errada não exclui')
+    ok(pg.input_value('#senhaExcluir') == '', 'senha errada limpa o campo')
+    pg.fill('#senhaExcluir', 'ok123'); pg.dblclick('[data-a=ok-excluir]')
+    pg.wait_for_selector('.tile')
+    ok('gama' not in pg.evaluate('Object.keys(window.__db.registro)') and pg.evaluate('window.__db.historico.gama') is None, 'senha certa exclui loja e histórico')
+    ok('Gama Cell' not in pg.inner_text('#root'), 'sai da lista')
+    # arquivada, excluída pelos Ajustes
+    pg.goto(URL + '#/loja/velha'); pg.wait_for_selector('.hero')
+    pg.click('[data-a=sheet-arquivar]'); pg.click('[data-a=ok-arquivar]'); pg.wait_for_selector('.tile')
+    pg.click('.barra a:has-text("Ajustes")'); pg.wait_for_selector('[data-a=sheet-excluir]')
+    pg.click('[data-a=sheet-excluir]'); pg.fill('#senhaExcluir', 'ok123'); pg.keyboard.press('Enter')
+    pg.wait_for_function("!document.querySelector('[data-a=sheet-excluir]')")
+    ok('velha' not in pg.evaluate('Object.keys(window.__db.registro)'), 'arquivada excluída pelos Ajustes (Enter confirma)')
+
     print('Importar')
     pg.click('.barra a:has-text("Ajustes")'); pg.wait_for_selector('#arq', state='attached')
     import json, tempfile

@@ -55,7 +55,7 @@ function motivoLeitura(e) {
 function textoErro(e) {
   const c = D.codigo(e);
   if (c === 'timeout') return 'Sem resposta. Pode ter gravado: confira a data antes de tentar de novo.';
-  if (c === 'conflito' || c === 'ja-existe') return e.message;
+  if (c === 'conflito' || c === 'ja-existe' || c === 'senha') return e.message;
   if (/permission[-_ ]denied/i.test(c)) return 'Sem permissão: as regras do banco não deixaram gravar.';
   if (/network|unavailable/i.test(c)) return 'Sem internet.';
   return (e && e.message) ? e.message : `Erro (${c}).`;
@@ -295,7 +295,8 @@ ${hero}
 <button class="acao" data-a="sheet-arquivar" data-id="${esc(id)}">${ic('box')}Arquivar</button>
 </div>
 <h2>Histórico</h2>${blocoHist(id)}
-<p class="sub" style="margin-top:18px">Projeto da loja: ${esc((l.firebaseConfig && l.firebaseConfig.projectId) || id)}</p></main>`;
+<button class="btn excluir" data-a="sheet-excluir" data-id="${esc(id)}">Excluir loja</button>
+<p class="sub" style="margin-top:6px">Projeto da loja: ${esc((l.firebaseConfig && l.firebaseConfig.projectId) || id)}</p></main>`;
 }
 
 function telaSmart(id) {
@@ -315,7 +316,7 @@ function telaAvisos() {
 
 function telaAjustes() {
   const arq = Object.entries(S.registro || {}).filter(([, l]) => l && typeof l === 'object' && l.arquivada);
-  const lista = arq.length ? `<div class="bloco">${arq.map(([id, l]) => `<div class="hist"><div>${esc(l.nome || id)}<small>${esc(id)}</small></div><button class="btn contorno" style="width:auto;min-height:40px" data-a="restaurar" data-id="${esc(id)}">Restaurar</button></div>`).join('')}</div>` : '<div class="nota">Nenhuma loja arquivada.</div>';
+  const lista = arq.length ? `<div class="bloco">${arq.map(([id, l]) => `<div class="hist"><div>${esc(l.nome || id)}<small>${esc(id)}</small></div><div class="linha-botoes"><button class="btn contorno mini" data-a="restaurar" data-id="${esc(id)}">Restaurar</button><button class="btn contorno mini" style="color:var(--bad);border-color:var(--bad)" data-a="sheet-excluir" data-id="${esc(id)}">Excluir</button></div></div>`).join('')}</div>` : '<div class="nota">Nenhuma loja arquivada.</div>';
   return `<main class="tela"><div class="kicker">Painel Vortex</div><h1>Ajustes</h1>
 <h2>Conta</h2><div class="bloco"><div class="hist"><div>${esc(S.user.email || '')}<small>administrador</small></div></div></div>
 <div class="pilha"><button class="btn contorno" data-a="sair">Sair</button></div>
@@ -511,6 +512,28 @@ async function okArquivar(el) {
   });
 }
 
+function sheetExcluir(id) {
+  const l = lojaDe(id); if (!l) return;
+  abrir(`<div><h3>Excluir loja</h3><p class="sub"><b>${esc(l.nome)}</b> sai do painel e o histórico dela é apagado. O sistema da loja não é mexido: ela continua com a data que está no banco dela, mas você deixa de controlar o bloqueio por aqui. Dá para cadastrar de novo depois.</p>
+<div class="campo"><label for="senhaExcluir">Sua senha de login</label><input id="senhaExcluir" type="password" autocomplete="current-password" data-enter="ok-excluir"></div>
+<p id="msg" class="status" role="alert"></p>${dupla(btnCancelar, `<button class="btn perigo" data-a="ok-excluir" data-id="${esc(id)}">Excluir de vez</button>`)}</div>`, '#senhaExcluir');
+}
+async function okExcluir(el) {
+  const id = el.dataset.id, campo = sheet.querySelector('#senhaExcluir'), senha = campo.value;
+  if (!senha) return msg('Digite sua senha para confirmar.');
+  await rodar(el, async () => {
+    try {
+      await D.excluirLoja(id, senha);
+      delete S.registro[id]; delete S.lic[id]; delete S.hist[id];
+      fecharSheet(); toast('Loja excluída');
+      if (rota().t === 'loja') location.hash = '#/'; else render();
+    } catch (e) {
+      campo.value = ''; msg(textoErro(e));
+      if (D.codigo(e) === 'timeout') recarregarTudo();      // não sabemos se apagou: confere na lista
+    }
+  });
+}
+
 // Registra no histórico; falha aqui nunca desfaz a ação principal
 function historico(id, entrada) {
   D.registrarHistorico(id, limpa(Object.assign({ por: S.user && S.user.email }, entrada)))
@@ -631,6 +654,7 @@ const ACOES = {
   'sheet-nome': el => sheetNome(el.dataset.id),
   'sheet-bloq': el => sheetBloq(el.dataset.id),
   'sheet-arquivar': el => sheetArquivar(el.dataset.id),
+  'sheet-excluir': el => sheetExcluir(el.dataset.id), 'ok-excluir': okExcluir,
   'ok-renovar': okRenovar, 'ok-data': okData, 'ok-nome': okNome, 'ok-bloq': okBloq, 'ok-arquivar': okArquivar,
   testar: acaoTestar, cadastrar: acaoCadastrar,
   restaurar: el => rodar(el, async () => {

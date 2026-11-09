@@ -85,6 +85,9 @@ svg { display: block; }
 .btn.contorno { background: none; border: 1.5px solid var(--ink); }
 .btn.perigo { background: var(--bad); color: #fff; }
 .btn.fantasma { background: none; color: var(--muted); font-weight: 700; min-height: 44px; }
+.btn.excluir { background: none; color: var(--bad); font-weight: 700; min-height: 48px; margin-top: 18px; }
+.btn.mini { width: auto; min-height: 40px; padding: 0 14px; font-size: 14px; }
+.linha-botoes { display: flex; gap: 8px; }
 .grade { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
 .acao { min-height: 68px; border-radius: 20px; border: 1px solid var(--line); background: var(--card); display: flex; align-items: center; gap: 10px; padding: 0 14px; font-weight: 700; font-size: 14px; text-align: left; }
 .acao svg { flex: none; color: var(--verde); }

@@ -1,6 +1,6 @@
 // data.js — toda a conversa com o Firebase fica aqui (o app.js só chama estas funções).
 import { initializeApp, getApp, deleteApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
 import { getDatabase, ref, get, set, update, push, runTransaction, query, limitToLast, orderByKey } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js';
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-functions.js';
 import { PAINEL_CONFIG, SMART_CONFIG, TIMEOUT_MS } from './config.js';
@@ -52,6 +52,21 @@ export async function cadastrarLoja(loja) {   // loja = { id, nome, firebaseConf
 export const renomearLoja = (id, nome) => comTimeout(update(ref(painelDb, `lojas/${id}`), { nome }));
 export const arquivarLoja = (id, arquivada) => comTimeout(update(ref(painelDb, `lojas/${id}`), { arquivada: !!arquivada }));
 
+// Exclui a loja do painel (cadastro + histórico). Não toca no banco da loja.
+// A senha é conferida pelo Firebase (reautenticação): se estiver errada, nada é apagado.
+export async function excluirLoja(id, senha) {
+  const u = painelAuth.currentUser;
+  if (!u || !u.email) throw Object.assign(new Error('Sem login. Entre de novo.'), { code: 'senha' });
+  try { await comTimeout(reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, senha)), 15000); }
+  catch (e) {
+    const c = codigo(e);
+    const texto = (c === 'auth/wrong-password' || c === 'auth/invalid-credential') ? 'Senha incorreta.' : c === 'timeout' ? 'Sem resposta ao conferir a senha. Nada foi apagado.' : msgAuth(e);
+    throw Object.assign(new Error(texto), { code: 'senha' });
+  }
+  await comTimeout(update(ref(painelDb), { [`lojas/${id}`]: null, [`historico/${id}`]: null }));   // as duas partes na mesma gravação
+  esquecerLoja(id);
+}
+
 // ── Histórico de ações ─────────────────────────────────────────
 export async function registrarHistorico(lojaId, entrada) {
   await comTimeout(push(ref(painelDb, `historico/${lojaId}`), Object.assign({ em: Date.now() }, entrada)));
@@ -75,6 +90,11 @@ function licRef(loja) {
     conexoes.set(loja.id, c);
   }
   return c;
+}
+
+function esquecerLoja(id) {   // solta a conexão guardada daquela loja
+  conexoes.delete(id);
+  try { deleteApp(getApp('loja-' + id)).catch(() => {}); } catch (e) { /* nunca foi aberta */ }
 }
 
 export async function lerLicenca(loja) {
