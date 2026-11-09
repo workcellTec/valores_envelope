@@ -12,6 +12,7 @@ MOCK = open(os.path.join(RAIZ, 'test', 'mock-data.js'), encoding='utf-8').read()
 hoje = datetime.datetime.now(zoneinfo.ZoneInfo('America/Sao_Paulo')).date()
 dmy = lambda d: d.strftime('%d/%m/%Y')
 
+VERSAO_ATUAL = re.search(r"VERSAO = '([^']+)'", open(os.path.join(RAIZ, 'config.js'), encoding='utf-8').read()).group(1)
 falhas = []
 def ok(cond, msg):
     print(('  ok  ' if cond else ' FALHA ') + msg)
@@ -177,7 +178,7 @@ with sync_playwright() as p:
     print('Atualização')
     pg.click('[data-a=atualizar-app]')
     pg.wait_for_function("document.querySelector('#stAtu').textContent.includes('mais recente')")
-    ok('1.1.0' in pg.inner_text('#stAtu'), 'sem versão nova: avisa que está atualizado')
+    ok(VERSAO_ATUAL in pg.inner_text('#stAtu'), 'sem versão nova: avisa que está atualizado')
     versao_nova['v'] = '9.9.9'
     pg.evaluate('window.__marca = 1')
     with pg.expect_navigation():
