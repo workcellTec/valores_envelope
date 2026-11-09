@@ -1,0 +1,73 @@
+name: Gerar APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/apk.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * 1'   # semanal: mantém a chave de assinatura viva no cache
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      # Chave de assinatura estável (mesma em todo build => o APK novo instala por cima do antigo).
+      # Fica só no cache privado do repositório, nunca no código.
+      - name: Restaurar chave de assinatura
+        id: ks
+        uses: actions/cache@v4
+        with:
+          path: ~/vortex-ks
+          key: vortex-keystore-v1
+
+      - name: Criar chave (só na primeira vez)
+        if: steps.ks.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/vortex-ks
+          openssl rand -hex 16 > ~/vortex-ks/senha
+          keytool -genkeypair -keystore ~/vortex-ks/vortex.keystore \
+            -storepass "$(cat ~/vortex-ks/senha)" -keypass "$(cat ~/vortex-ks/senha)" \
+            -alias vortex -keyalg RSA -keysize 2048 -validity 36500 \
+            -dname "CN=Painel Vortex, O=WorkCell Tec, C=BR"
+
+      - name: Compilar APK assinado
+        run: |
+          export VORTEX_KS_FILE="$HOME/vortex-ks/vortex.keystore"
+          export VORTEX_KS_PASS="$(cat $HOME/vortex-ks/senha)"
+          gradle -p android assembleRelease --no-daemon \
+            -PversionCode=${{ github.run_number }} \
+            -PversionName=1.0.${{ github.run_number }}
+
+      - name: Conferir APK
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          ls -l "$APK"
+          cp "$APK" PainelVortex.apk
+          "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs PainelVortex.apk | head -3
+
+      - name: Publicar na aba Releases (link fixo)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete apk-latest --cleanup-tag --yes || true
+          gh release create apk-latest PainelVortex.apk \
+            --title "Painel Vortex (APK)" \
+            --notes "APK do Painel Vortex, build ${{ github.run_number }}. Instale por cima do anterior; os dados ficam no painel online." \
+            --latest=false

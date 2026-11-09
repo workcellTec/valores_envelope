@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+
+def codigoVersao = (project.findProperty('versionCode') ?: '1') as int
+def nomeVersao  = project.findProperty('versionName') ?: '1.0.0'
+
+android {
+    namespace 'com.workcelltec.vortex'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.workcelltec.vortex'
+        minSdk 24
+        targetSdk 34
+        versionCode codigoVersao
+        versionName nomeVersao
+    }
+
+    // A chave de assinatura nunca fica no repositório: o workflow a gera e guarda em cache privado.
+    def ksArquivo = System.getenv('VORTEX_KS_FILE')
+    signingConfigs {
+        vortex {
+            if (ksArquivo) {
+                storeFile file(ksArquivo)
+                storePassword System.getenv('VORTEX_KS_PASS')
+                keyAlias 'vortex'
+                keyPassword System.getenv('VORTEX_KS_PASS')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (ksArquivo) signingConfig signingConfigs.vortex
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

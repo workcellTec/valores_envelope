@@ -33,3 +33,13 @@ Mude `VERSAO` em `config.js` e `CACHE` em `sw.js` para o mesmo número, e publiq
 
 ## Depois (precisa de PC)
 Vencimento automático e troca de senha no VortexSmart: novas Cloud Functions, só adicionando (sem mexer nas existentes nem nas regras).
+
+## App Android (APK)
+
+`android/` é uma casca mínima (WebView) que abre o painel hospedado no GitHub Pages em tela cheia, sem depender do Chrome.
+O painel continua atualizando sozinho; o APK só precisa ser refeito se `android/` mudar.
+
+- O GitHub Actions (`.github/workflows/apk.yml`) compila o APK a cada mudança em `android/`, toda segunda-feira e manualmente (Actions → Gerar APK → Run workflow).
+- Download fixo: `https://github.com/workcellTec/valores_envelope/releases/download/apk-latest/PainelVortex.apk`
+- A chave de assinatura é criada pelo próprio workflow e guardada no cache privado do repositório (não está no código). Enquanto ela existir, cada APK novo instala por cima do antigo.
+- Para trocar o endereço do painel, edite `URL`/`HOST` em `android/app/src/main/java/com/workcelltec/vortex/MainActivity.java`.
