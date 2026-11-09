@@ -175,6 +175,29 @@ with sync_playwright() as p:
     t = pg.inner_text('#stImp')
     ok('1 cadastrada' in t and '1 já existia' in t and '1 com erro' in t, f'importação: {t}')
 
+    print('Tema')
+    tema = lambda: pg.evaluate("document.documentElement.dataset.tema")
+    fundo = lambda: pg.evaluate("getComputedStyle(document.body).backgroundColor")
+    pg.click('[data-a=tema][data-t=escuro]')
+    ok(tema() == 'escuro' and fundo() == 'rgb(14, 16, 19)', f'escuro aplicado ({tema()}, {fundo()})')
+    pg.screenshot(path='/tmp/escuro_ajustes.png')
+    pg.click('[data-a=tema][data-t=claro]')
+    ok(tema() == 'claro' and fundo() == 'rgb(242, 239, 232)', 'claro aplicado')
+    pg.click('[data-a=tema][data-t=escuro]')
+
+    print('Teclado')
+    pg.goto(URL + '#/loja/alfa'); pg.wait_for_selector('.hero')
+    pg.click('[data-a=sheet-nome]'); pg.wait_for_selector('.sheet')
+    pg.evaluate("Object.defineProperty(window.visualViewport,'height',{value:400,configurable:true}); window.visualViewport.dispatchEvent(new Event('resize'))")
+    topo, alt = pg.eval_on_selector('.fundo', 'e=>{const r=e.getBoundingClientRect();return [r.top,r.height]}')
+    base = pg.eval_on_selector('.sheet', 'e=>e.getBoundingClientRect().bottom')
+    ok(abs(alt - 400) < 1 and topo == 0, f'fundo da janela acompanha a área visível (altura {alt})')
+    ok(base <= 401, f'janela inteira acima do teclado (base em {base:.0f} de 400)')
+    pg.screenshot(path='/tmp/escuro_sheet.png')
+    pg.click('[data-a=fechar]')
+    pg.evaluate("delete window.visualViewport.height; window.visualViewport.dispatchEvent(new Event('resize'))")
+    pg.goto(URL + '#/ajustes'); pg.wait_for_selector('#stAtu')
+
     print('Atualização')
     pg.click('[data-a=atualizar-app]')
     pg.wait_for_function("document.querySelector('#stAtu').textContent.includes('mais recente')")
@@ -187,6 +210,7 @@ with sync_playwright() as p:
     pg.wait_for_selector('#fLogin')
     pg.fill('#em', 'a@b.com'); pg.fill('#pw', 'ok123'); pg.click('#lgBtn'); pg.wait_for_selector('#stAtu')   # o endereço #/ajustes continua depois de recarregar
     ok('9.9.9' in pg.inner_text('#root'), 'depois de recarregar mostra a versão nova')
+    ok(tema() == 'escuro', 'o tema escolhido continua depois de recarregar')
 
     print('Sair')
     pg.click('[data-a=sair]'); pg.wait_for_selector('#fLogin')

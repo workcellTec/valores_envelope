@@ -20,6 +20,35 @@ const S = {
 let nova = { config: null, texto: '' };
 const hoje = () => L.hojeISO();
 
+// ── Tema (automático / claro / escuro) ─────────────────────────
+const escuroDoSistema = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+const temaGuardado = () => { try { return localStorage.getItem('painel-tema') || 'auto'; } catch (e) { return 'auto'; } };
+function aplicarTema() {
+  const t = temaGuardado();
+  const escuro = t === 'escuro' || (t === 'auto' && !!(escuroDoSistema && escuroDoSistema.matches));
+  document.documentElement.setAttribute('data-tema', escuro ? 'escuro' : 'claro');
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.setAttribute('content', escuro ? '#0E1013' : '#F2EFE8');
+}
+function escolherTema(t) {
+  try { localStorage.setItem('painel-tema', t); } catch (e) { /* sem armazenamento: vale só nesta sessão */ }
+  aplicarTema(); render();
+}
+if (escuroDoSistema && escuroDoSistema.addEventListener) escuroDoSistema.addEventListener('change', aplicarTema);
+
+// ── Teclado: o fundo das janelas acompanha a área visível (sem o teclado por cima) ──
+const vv = window.visualViewport;
+function ajustarArea() {
+  const r = document.documentElement.style;
+  r.setProperty('--vvh', vv.height + 'px'); r.setProperty('--vvt', vv.offsetTop + 'px');
+}
+if (vv) { vv.addEventListener('resize', ajustarArea); vv.addEventListener('scroll', ajustarArea); ajustarArea(); }
+document.addEventListener('focusin', ev => {   // campo de texto sempre visível quando o teclado abre
+  const t = ev.target;
+  if (t.matches && t.matches('input:not([type=radio]):not([type=checkbox]):not([type=file]):not([type=date]), textarea')) {
+    setTimeout(() => { if (t.isConnected && document.activeElement === t) t.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 300);
+  }
+});
+
 // ── Ícones ─────────────────────────────────────────────────────
 const P = {
   plus: '<path d="M12 5v14M5 12h14"/>', back: '<path d="M15 6l-6 6 6 6"/>',
@@ -324,6 +353,8 @@ function telaAjustes() {
 <div class="pilha"><label class="btn verde" for="arq">Escolher arquivo</label><input id="arq" type="file" accept="application/json,.json" data-in="arq" hidden></div>
 <p id="stImp" class="status mud" role="status"></p>
 <h2>Arquivadas</h2>${lista}
+<h2>Aparência</h2>
+<div class="segmento tres" role="group" aria-label="Tema">${[['auto', 'Automático'], ['claro', 'Claro'], ['escuro', 'Escuro']].map(([v, r]) => `<button data-a="tema" data-t="${v}" class="${temaGuardado() === v ? 'on' : ''}" aria-pressed="${temaGuardado() === v}">${r}</button>`).join('')}</div>
 <h2>Atualização</h2><p class="sub">Versão instalada: ${esc(VERSAO)}</p>
 <div class="pilha"><button class="btn contorno" data-a="atualizar-app">Buscar atualização</button></div>
 <p id="stAtu" class="status mud" role="status"></p></main>${nav('ajustes')}`;
@@ -681,7 +712,7 @@ const ACOES = {
   'sheet-nome': el => sheetNome(el.dataset.id),
   'sheet-bloq': el => sheetBloq(el.dataset.id),
   'sheet-arquivar': el => sheetArquivar(el.dataset.id),
-  'sheet-excluir': el => sheetExcluir(el.dataset.id), 'ok-excluir': okExcluir, 'atualizar-app': buscarAtualizacao,
+  'sheet-excluir': el => sheetExcluir(el.dataset.id), 'ok-excluir': okExcluir, 'atualizar-app': buscarAtualizacao, tema: el => escolherTema(el.dataset.t),
   'ok-renovar': okRenovar, 'ok-data': okData, 'ok-nome': okNome, 'ok-bloq': okBloq, 'ok-arquivar': okArquivar,
   testar: acaoTestar, cadastrar: acaoCadastrar,
   restaurar: el => rodar(el, async () => {
