@@ -22,10 +22,60 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Painel">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap"></noscript>
+<style id="splash-css">
+/* Abertura: fica na página desde o primeiro desenho, então esconde o carregamento das lojas */
+#splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;overflow:hidden;color:#fff;
+  background:radial-gradient(120% 90% at 50% 38%,#16584a 0%,#0E3B2E 46%,#06201a 100%);clip-path:circle(150% at 50% 42%)}
+.sp-glow{position:absolute;left:50%;top:42%;width:150vmax;height:150vmax;transform:translate(-50%,-50%) scale(.15);
+  background:radial-gradient(circle,rgba(200,241,105,.26),rgba(200,241,105,0) 52%);animation:sp-glow 2.2s cubic-bezier(.2,.7,.2,1) forwards}
+.sp-centro{position:relative;display:grid;justify-items:center;gap:26px;transform:translateY(-7vh)}
+.sp-logo{width:136px;height:136px;overflow:visible;filter:drop-shadow(0 0 18px rgba(200,241,105,.35))}
+.sp-anel-fundo{fill:none;stroke:rgba(200,241,105,.16);stroke-width:3}
+.sp-anel{fill:none;stroke:#C8F169;stroke-width:3.5;stroke-linecap:round;stroke-dasharray:327;stroke-dashoffset:327;
+  transform:rotate(-90deg);transform-origin:60px 60px;animation:sp-desenha .95s cubic-bezier(.65,0,.25,1) .1s forwards}
+.sp-v{fill:none;stroke:#C8F169;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:110;stroke-dashoffset:110;
+  animation:sp-desenha .55s cubic-bezier(.65,0,.25,1) .8s forwards}
+.sp-ponto{fill:#C8F169;transform-box:fill-box;transform-origin:center;transform:scale(0);animation:sp-pop .45s cubic-bezier(.3,1.7,.5,1) forwards}
+.sp-ponto.p1{animation-delay:1.2s}.sp-ponto.p2{animation-delay:1.3s}
+.sp-orbita{opacity:0;transform-origin:60px 60px;animation:sp-aparece .3s 1.5s forwards,sp-gira 1.2s linear 1.5s infinite}
+.sp-orbita circle{fill:#fff}
+.sp-nome{display:flex;font:800 25px/1 Manrope,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase}
+.sp-nome span{display:inline-block;opacity:0;transform:translateY(16px);animation:sp-sobe .55s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(.95s + var(--i)*.04s)}
+.sp-nome .sp-esp{width:.55em}
+.sp-sub{font:700 11px/1 Manrope,system-ui,sans-serif;letter-spacing:.3em;text-transform:uppercase;color:#9CC9B7;opacity:0;animation:sp-fade .6s 1.7s forwards}
+#splash.sai{pointer-events:none;animation:sp-iris .75s cubic-bezier(.76,0,.24,1) forwards}
+#splash.sai .sp-centro{animation:sp-some .5s ease-in forwards}
+@keyframes sp-glow{to{transform:translate(-50%,-50%) scale(1)}}
+@keyframes sp-desenha{to{stroke-dashoffset:0}}
+@keyframes sp-pop{to{transform:scale(1)}}
+@keyframes sp-aparece{to{opacity:1}}
+@keyframes sp-gira{to{transform:rotate(360deg)}}
+@keyframes sp-sobe{to{opacity:1;transform:none}}
+@keyframes sp-fade{to{opacity:1}}
+@keyframes sp-iris{from{clip-path:circle(150% at 50% 42%)}to{clip-path:circle(0% at 50% 42%)}}
+@keyframes sp-some{to{opacity:0;transform:translateY(-7vh) scale(.82)}}
+@media (prefers-reduced-motion:reduce){
+  #splash *{animation:none!important;opacity:1!important;transform:none!important;stroke-dashoffset:0!important}
+  .sp-orbita,.sp-glow{display:none}
+  #splash.sai{animation:sp-fade-out .25s forwards}
+  @keyframes sp-fade-out{to{opacity:0}}
+}
+</style>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div id="splash" aria-hidden="true">
+<div class="sp-glow"></div>
+<div class="sp-centro">
+<svg class="sp-logo" viewBox="0 0 120 120"><circle class="sp-anel-fundo" cx="60" cy="60" r="52"/><circle class="sp-anel" cx="60" cy="60" r="52"/>
+<polyline class="sp-v" points="34,40 60,84 86,40"/><circle class="sp-ponto p1" cx="34" cy="40" r="8"/><circle class="sp-ponto p2" cx="86" cy="40" r="8"/>
+<g class="sp-orbita"><circle cx="60" cy="8" r="4.5"/></g></svg>
+<div class="sp-nome"><span style="--i:0">P</span><span style="--i:1">a</span><span style="--i:2">i</span><span style="--i:3">n</span><span style="--i:4">e</span><span style="--i:5">l</span><span class="sp-esp" style="--i:6"></span><span style="--i:7">V</span><span style="--i:8">o</span><span style="--i:9">r</span><span style="--i:10">t</span><span style="--i:11">e</span><span style="--i:12">x</span></div>
+<div class="sp-sub">Controle das lojas</div>
+</div>
+</div>
 <div id="root"></div>
 <div id="sheet"></div>
 <div id="toast" role="status" aria-live="polite"></div>

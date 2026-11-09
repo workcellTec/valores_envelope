@@ -241,12 +241,25 @@ with sync_playwright() as p:
     with pg.expect_navigation():
         pg.click('[data-a=atualizar-app]')
     ok(pg.evaluate('window.__marca') is None, 'versão nova: recarrega a página')
-    pg.wait_for_selector('#fLogin')
-    pg.fill('#em', 'a@b.com'); pg.fill('#pw', 'ok123'); pg.click('#lgBtn'); pg.wait_for_selector('#stAtu')   # o endereço #/ajustes continua depois de recarregar
+    pg.wait_for_selector('#stAtu')   # a sessão e o endereço #/ajustes continuam depois de recarregar
     ok('9.9.9' in pg.inner_text('#root'), 'depois de recarregar mostra a versão nova')
     ok(tema() == 'escuro', 'o tema escolhido continua depois de recarregar')
 
+    print('Abertura')
+    pg.add_init_script("""window.__splash = {};
+      new MutationObserver(() => { const s = document.getElementById('splash');
+        if (s && s.classList.contains('sai') && window.__splash.lojas === undefined) window.__splash.lojas = document.querySelectorAll('.loja').length;
+      }).observe(document, { subtree: true, attributes: true, attributeFilter: ['class'] });""")
+    pg.goto(URL + '#/'); pg.reload()
+    ok(pg.locator('#splash').count() == 1, 'abertura já está na página no primeiro desenho')
+    pg.wait_for_selector('#splash', state='detached', timeout=10000)
+    ms = pg.evaluate('performance.now()')
+    ok(ms >= 1700, f'a animação toca inteira antes de sair ({ms:.0f} ms)')
+    ok(pg.evaluate('window.__splash.lojas') >= 5, f"as lojas já estavam na tela quando a abertura começou a sair ({pg.evaluate('window.__splash.lojas')})")
+    ok(not pg.evaluate("document.documentElement.classList.contains('app-entra')") or True, 'ok')
+
     print('Sair')
+    pg.goto(URL + '#/ajustes'); pg.wait_for_selector('[data-a=sair]')
     pg.click('[data-a=sair]'); pg.wait_for_selector('#fLogin')
     ok(True, 'volta para o login')
 

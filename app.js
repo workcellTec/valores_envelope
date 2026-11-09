@@ -49,6 +49,30 @@ document.addEventListener('focusin', ev => {   // campo de texto sempre visível
   }
 });
 
+// ── Abertura (splash): some só quando as lojas já estão na tela ──
+const splashEl = document.getElementById('splash');
+const reduzMovimento = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+let splashFeito = false, splashAgendado = false;
+function sairSplash() {
+  if (splashFeito) return;
+  splashFeito = true;
+  if (!splashEl) return;
+  document.documentElement.classList.add('app-entra');
+  splashEl.classList.add('sai');
+  const fim = () => { splashEl.remove(); setTimeout(() => document.documentElement.classList.remove('app-entra'), 1300); };
+  splashEl.addEventListener('animationend', ev => { if (ev.target === splashEl) fim(); });
+  setTimeout(fim, 1300);   // garantia, caso o navegador não dispare o fim da animação
+}
+function checarSplash() {
+  if (splashFeito || splashAgendado || S.user === undefined) return;
+  const carregando = Object.values(S.lic).some(x => x && x.carregando);
+  const pronto = S.user === null || ((S.registro !== null || S.erroRegistro) && !carregando && S.smart.estado !== 'carregando' && S.smart.estado !== 'idle');
+  if (!pronto) return;
+  splashAgendado = true;
+  setTimeout(sairSplash, Math.max(0, (reduzMovimento ? 500 : 1750) - performance.now()));   // a animação toca inteira, mesmo com dados rápidos
+}
+setTimeout(sairSplash, 7000);   // teto: a abertura nunca prende a pessoa
+
 // ── Ícones ─────────────────────────────────────────────────────
 const P = {
   plus: '<path d="M12 5v14M5 12h14"/>', back: '<path d="M15 6l-6 6 6 6"/>',
@@ -227,6 +251,7 @@ function entrou() {
 // Re-desenha quando chegam dados novos, sem apagar o que a pessoa está digitando
 function atualizar() {
   if (!S.user) return;
+  checarSplash();   // inclusive nas telas que não redesenham (Ajustes, Nova loja): a abertura não pode ficar presa
   const t = rota().t;
   if (t === 'nova' || t === 'ajustes') return;
   render();
@@ -242,9 +267,9 @@ function anel(e) {
   return `<div class="anel"><svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true"><circle class="trilho" cx="26" cy="26" r="22"/><circle class="prog ${e.k}" cx="26" cy="26" r="22" stroke-dasharray="${traco.toFixed(1)} 138.2"/></svg><div class="miolo ${e.k}">${e.bloq ? ic('lock', 20) : esc(e.num)}</div></div>`;
 }
 const nomeSistema = s => s === 'cell' ? 'VortexCell' : 'VortexSmart';
-function cartao(it) {
+function cartao(it, i) {
   const e = it.est;
-  return `<a class="loja" href="#/${it.sistema === 'cell' ? 'loja' : 'smart'}/${encodeURIComponent(it.id)}">${anel(e)}<div class="info"><span class="nome">${esc(it.nome)}</span><div class="meta"><span class="tag">${nomeSistema(it.sistema)}</span><span class="chip ${e.k}">${esc(e.chip)}</span></div></div></a>`;
+  return `<a class="loja" style="--i:${Math.min(i + 3, 14)}" href="#/${it.sistema === 'cell' ? 'loja' : 'smart'}/${encodeURIComponent(it.id)}">${anel(e)}<div class="info"><span class="nome">${esc(it.nome)}</span><div class="meta"><span class="tag">${nomeSistema(it.sistema)}</span><span class="chip ${e.k}">${esc(e.chip)}</span></div></div></a>`;
 }
 
 function telaLista() {
@@ -392,7 +417,8 @@ function telaLogin() {
 <p id="lgMsg" class="status bad" role="alert"></p><div class="pilha"><button class="btn verde" type="submit" id="lgBtn">Entrar</button></div></form></main>`;
 }
 
-function render() {
+function render() { desenhar(); checarSplash(); }
+function desenhar() {
   if (S.user === undefined) { root.innerHTML = '<div class="login"><div class="vazio">Carregando…</div></div>'; return; }
   if (!S.user) { root.innerHTML = telaLogin(); return; }
   const r = rota();

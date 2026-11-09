@@ -25,6 +25,7 @@ export const __db = db;
 window.__db = db; window.__chamadas = { renovar: 0, push: 0 };
 
 let obs = null, user = null;
+try { if (sessionStorage.getItem('mockUser')) user = { uid: 'U1', email: 'a@b.com' }; } catch (e) { /* sem sessionStorage */ }
 export const comTimeout = p => p;
 export const codigo = e => (e && (e.code || e.message)) || 'erro';
 export const msgAuth = e => 'E-mail ou senha incorretos.';
@@ -33,9 +34,9 @@ export const usuarioAtual = () => user;
 export const observarSmart = () => () => {};
 export async function entrar(email, senha) {
   if (senha !== 'ok123') throw { code: 'auth/invalid-credential' };
-  user = { uid: 'U1', email }; obs(user);
+  user = { uid: 'U1', email }; try { sessionStorage.setItem('mockUser', '1'); } catch (e) { /* ok */ } obs(user);
 }
-export async function sair() { user = null; obs(null); }
+export async function sair() { user = null; try { sessionStorage.removeItem('mockUser'); } catch (e) { /* ok */ } obs(null); }
 export async function carregarRegistro() { return JSON.parse(JSON.stringify(db.registro)); }
 export async function cadastrarLoja(l) {
   if (db.registro[l.id]) throw Object.assign(new Error('Essa loja já está cadastrada.'), { code: 'ja-existe' });

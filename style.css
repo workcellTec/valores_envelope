@@ -77,6 +77,12 @@ svg { display: block; }
 .chip.bad { background: var(--bad-bg); color: var(--bad); } .chip.mud { background: var(--mud-bg); color: var(--mud); }
 .vazio { margin-top: 24px; padding: 28px 16px; text-align: center; color: var(--muted); background: var(--card); border: 1px dashed var(--line); border-radius: 20px; }
 
+/* Entrada dos cartões logo depois da abertura (a classe app-entra dura ~1s) */
+.app-entra .tile, .app-entra .loja { animation: entra .55s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i, 0) * 45ms + 150ms); }
+.app-entra .tile:nth-child(2) { --i: 1; } .app-entra .tile:nth-child(3) { --i: 2; }
+@keyframes entra { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .app-entra .tile, .app-entra .loja { animation: none; } }
+
 /* Barra de baixo */
 .barra { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: min(448px, calc(100% - 32px)); height: 64px; padding: 6px; border-radius: 32px; background: var(--barra); display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; z-index: 20; }
 .barra a { display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 26px; color: var(--barra-txt); font-size: 13px; font-weight: 700; }
