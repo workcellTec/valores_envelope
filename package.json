@@ -1,0 +1,6 @@
+{
+  "name": "painel-vortex",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test test/lib.test.mjs" }
+}

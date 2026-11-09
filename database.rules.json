@@ -1,0 +1,42 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "lojas": {
+      ".read": "auth != null && auth.uid === 'jbNSXI6pQpY63XRXJ8FPhQ1a7BL2'",
+      ".write": "auth != null && auth.uid === 'jbNSXI6pQpY63XRXJ8FPhQ1a7BL2'",
+      "$id": {
+        ".validate": "newData.hasChildren(['nome', 'sistema', 'firebaseConfig'])",
+        "nome": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60" },
+        "sistema": { ".validate": "newData.val() === 'cell'" },
+        "arquivada": { ".validate": "newData.isBoolean()" },
+        "criadoEm": { ".validate": "newData.isNumber()" },
+        "firebaseConfig": {
+          ".validate": "newData.hasChildren(['apiKey', 'projectId', 'databaseURL'])",
+          "$campo": { ".validate": "newData.isString() && newData.val().length < 300" }
+        },
+        "$outro": { ".validate": false }
+      }
+    },
+
+    "historico": {
+      ".read": "auth != null && auth.uid === 'jbNSXI6pQpY63XRXJ8FPhQ1a7BL2'",
+      ".write": "auth != null && auth.uid === 'jbNSXI6pQpY63XRXJ8FPhQ1a7BL2'",
+      "$loja": {
+        "$entrada": {
+          ".validate": "newData.hasChildren(['em', 'tipo'])",
+          "em": { ".validate": "newData.isNumber()" },
+          "tipo": { ".validate": "newData.isString() && newData.val().length < 30" },
+          "por": { ".validate": "newData.isString() && newData.val().length < 100" },
+          "de": { ".validate": "newData.isString() && newData.val().length < 100" },
+          "para": { ".validate": "newData.isString() && newData.val().length < 100" },
+          "base": { ".validate": "newData.isString() && newData.val().length < 20" },
+          "valor": { ".validate": "newData.isNumber()" },
+          "liberou": { ".validate": "newData.isBoolean()" },
+          "$outro": { ".validate": false }
+        }
+      }
+    }
+  }
+}
