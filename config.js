@@ -1,5 +1,5 @@
 // config.js — configurações públicas do Firebase (o apiKey do Firebase não é segredo; quem protege é o login + as regras do banco).
-export const VERSAO = '1.1.0';
+export const VERSAO = '1.2.0';
 
 // Projeto do painel: login do admin, lista de lojas e histórico
 export const PAINEL_CONFIG = {

@@ -24,6 +24,12 @@ with sync_playwright() as p:
     erros = []
     pg.on('pageerror', lambda e: erros.append(str(e)))
     pg.on('console', lambda m: erros.append(m.text) if m.type == 'error' and 'ERR_FAILED' not in m.text else None)   # ERR_FAILED = fontes bloqueadas de propósito
+    versao_nova = {'v': None}
+    def rota_config(r):   # simula o servidor publicando uma versão nova depois de aberto
+        corpo = open(os.path.join(RAIZ, 'config.js'), encoding='utf-8').read()
+        if versao_nova['v']: corpo = re.sub(r"VERSAO = '[^']+'", f"VERSAO = '{versao_nova['v']}'", corpo)
+        r.fulfill(body=corpo, content_type='text/javascript')
+    pg.route(re.compile(r'.*/config\.js(\?.*)?$'), rota_config)
     pg.route('**/data.js', lambda r: r.fulfill(body=MOCK, content_type='text/javascript'))
     pg.route(re.compile(r'https://(fonts\.googleapis|fonts\.gstatic|www\.gstatic)\.com/.*'), lambda r: r.abort())
     pg.goto(URL)
@@ -167,6 +173,19 @@ with sync_playwright() as p:
     pg.wait_for_function("document.querySelector('#stImp').textContent.includes('cadastrada')")
     t = pg.inner_text('#stImp')
     ok('1 cadastrada' in t and '1 já existia' in t and '1 com erro' in t, f'importação: {t}')
+
+    print('Atualização')
+    pg.click('[data-a=atualizar-app]')
+    pg.wait_for_function("document.querySelector('#stAtu').textContent.includes('mais recente')")
+    ok('1.1.0' in pg.inner_text('#stAtu'), 'sem versão nova: avisa que está atualizado')
+    versao_nova['v'] = '9.9.9'
+    pg.evaluate('window.__marca = 1')
+    with pg.expect_navigation():
+        pg.click('[data-a=atualizar-app]')
+    ok(pg.evaluate('window.__marca') is None, 'versão nova: recarrega a página')
+    pg.wait_for_selector('#fLogin')
+    pg.fill('#em', 'a@b.com'); pg.fill('#pw', 'ok123'); pg.click('#lgBtn'); pg.wait_for_selector('#stAtu')   # o endereço #/ajustes continua depois de recarregar
+    ok('9.9.9' in pg.inner_text('#root'), 'depois de recarregar mostra a versão nova')
 
     print('Sair')
     pg.click('[data-a=sair]'); pg.wait_for_selector('#fLogin')

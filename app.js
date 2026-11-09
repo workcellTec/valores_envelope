@@ -324,7 +324,9 @@ function telaAjustes() {
 <div class="pilha"><label class="btn verde" for="arq">Escolher arquivo</label><input id="arq" type="file" accept="application/json,.json" data-in="arq" hidden></div>
 <p id="stImp" class="status mud" role="status"></p>
 <h2>Arquivadas</h2>${lista}
-<p class="sub" style="margin-top:22px">Versão ${esc(VERSAO)}</p></main>${nav('ajustes')}`;
+<h2>Atualização</h2><p class="sub">Versão instalada: ${esc(VERSAO)}</p>
+<div class="pilha"><button class="btn contorno" data-a="atualizar-app">Buscar atualização</button></div>
+<p id="stAtu" class="status mud" role="status"></p></main>${nav('ajustes')}`;
 }
 
 function telaNova() {
@@ -534,6 +536,31 @@ async function okExcluir(el) {
   });
 }
 
+// Pergunta ao servidor qual é a versão publicada (config.js, sem cache). Se for outra, limpa o cache do app e recarrega.
+async function buscarAtualizacao(el) {
+  await rodar(el, async () => {
+    st('#stAtu', 'Procurando…', 'mud');
+    let remota;
+    try {
+      const r = await fetch('config.js?_=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) throw new Error('http ' + r.status);
+      const m = /VERSAO\s*=\s*['"]([^'"]+)['"]/.exec(await r.text());
+      remota = m && m[1];
+    } catch (e) { return st('#stAtu', navigator.onLine ? 'Não consegui consultar o servidor.' : 'Sem internet.'); }
+    if (!remota) return st('#stAtu', 'Não consegui ler a versão publicada.');
+    if (remota === VERSAO) {
+      if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistration().then(r => r && r.update()).catch(() => {});
+      return st('#stAtu', `Você já está na versão mais recente (${VERSAO}).`, 'ok');
+    }
+    st('#stAtu', `Versão ${remota} encontrada. Atualizando…`, 'ok');
+    try {
+      if ('serviceWorker' in navigator) { const reg = await navigator.serviceWorker.getRegistration(); if (reg) await reg.update(); }
+      if (window.caches) await Promise.all((await caches.keys()).map(k => caches.delete(k)));
+    } catch (e) { /* recarregar já pega os arquivos novos */ }
+    location.reload();
+  });
+}
+
 // Registra no histórico; falha aqui nunca desfaz a ação principal
 function historico(id, entrada) {
   D.registrarHistorico(id, limpa(Object.assign({ por: S.user && S.user.email }, entrada)))
@@ -654,7 +681,7 @@ const ACOES = {
   'sheet-nome': el => sheetNome(el.dataset.id),
   'sheet-bloq': el => sheetBloq(el.dataset.id),
   'sheet-arquivar': el => sheetArquivar(el.dataset.id),
-  'sheet-excluir': el => sheetExcluir(el.dataset.id), 'ok-excluir': okExcluir,
+  'sheet-excluir': el => sheetExcluir(el.dataset.id), 'ok-excluir': okExcluir, 'atualizar-app': buscarAtualizacao,
   'ok-renovar': okRenovar, 'ok-data': okData, 'ok-nome': okNome, 'ok-bloq': okBloq, 'ok-arquivar': okArquivar,
   testar: acaoTestar, cadastrar: acaoCadastrar,
   restaurar: el => rodar(el, async () => {
