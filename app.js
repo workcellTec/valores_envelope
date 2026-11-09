@@ -13,7 +13,7 @@ const S = {
   registro: null, erroRegistro: null,
   lic: {},                // id → { carregando } | { erro } | { cfg }
   hist: {},               // id → { carregando } | { erro } | { itens }
-  smart: { estado: 'idle', lojas: [], erro: null },
+  smart: { estado: 'idle', lojas: [], erro: null, acesso: {}, acessoErro: null },
   filtro: 'todas',
   ocupado: false,
 };
@@ -84,7 +84,8 @@ function motivoLeitura(e) {
 function textoErro(e) {
   const c = D.codigo(e);
   if (c === 'timeout') return 'Sem resposta. Pode ter gravado: confira a data antes de tentar de novo.';
-  if (c === 'conflito' || c === 'ja-existe' || c === 'senha') return e.message;
+  if (c === 'conflito' || c === 'ja-existe' || c === 'senha' || c === 'sem-login') return e.message;
+  if (/^functions\//.test(c)) return (e.message && e.message !== 'internal') ? e.message : `O servidor não conseguiu concluir (${c.slice(10)}). É seguro tentar de novo.`;
   if (/permission[-_ ]denied/i.test(c)) return 'Sem permissão: as regras do banco não deixaram gravar.';
   if (/network|unavailable/i.test(c)) return 'Sem internet.';
   return (e && e.message) ? e.message : `Erro (${c}).`;
@@ -112,9 +113,13 @@ function msg(t, k = 'bad') {
 
 // ── Estado exibido ─────────────────────────────────────────────
 const estCell = id => L.estadoDe(S.lic[id] || { carregando: true }, hoje());
-const estSmart = s => s.bloqueada
-  ? { cat: 'bloqueada', k: 'bad', ord: 0, bloq: true, manual: true, num: '', chip: 'Bloqueada', d: null }
-  : { cat: 'ativa', k: 'mud', ord: 4, num: '—', chip: 'Ativa', d: null };
+const acessoDe = id => (S.smart.acesso && S.smart.acesso[id]) || null;   // existe e bloqueada === true → suspensa
+const suspensa = id => { const a = acessoDe(id); return !!(a && a.bloqueada === true); };
+const estSmart = s => S.smart.acessoErro
+  ? { cat: 'semresposta', k: 'mud', ord: 1, num: '?', chip: 'Sem resposta', d: null }
+  : suspensa(s.lojaId)
+    ? { cat: 'bloqueada', k: 'bad', ord: 0, bloq: true, manual: true, num: '', chip: 'Suspensa', d: null }
+    : { cat: 'ativa', k: 'mud', ord: 4, num: '—', chip: 'Ativa', d: null };
 
 function itens() {
   const out = [];
@@ -144,18 +149,15 @@ async function carregarLic(id, silencioso) {
 
 async function carregarSmart() {
   const my = S.sessao;
-  if (S.smart.estado !== 'ok') S.smart = { estado: 'carregando', lojas: [], erro: null };   // já carregado: mantém a lista enquanto atualiza
-  try {
-    const lojas = await D.listarSmart();
-    if (my !== S.sessao) return;
-    S.smart = { estado: 'ok', lojas, erro: null };
-  } catch (e) {
-    if (my !== S.sessao) return;
-    S.smart = { estado: 'erro', lojas: [], erro: D.codigo(e) };
-  }
+  if (S.smart.estado !== 'ok') S.smart = { estado: 'carregando', lojas: [], erro: null, acesso: {}, acessoErro: null };   // já carregado: mantém a lista enquanto atualiza
+  const [l, a] = await Promise.allSettled([D.listarSmart(), D.lerAcessoSmart()]);
+  if (my !== S.sessao) return;
+  if (l.status === 'rejected') S.smart = { estado: 'erro', lojas: [], erro: D.codigo(l.reason), acesso: {}, acessoErro: null };
+  else S.smart = { estado: 'ok', lojas: l.value, erro: null, acesso: a.status === 'fulfilled' ? a.value : {}, acessoErro: a.status === 'rejected' ? D.codigo(a.reason) : null };
   atualizar();
 }
 
+const chaveHist = r => r.t === 'loja' ? r.id : r.t === 'smart' ? 'smart-' + r.id : null;   // VortexSmart e VortexCell não misturam histórico
 async function carregarHist(id) {
   const my = S.sessao;
   S.hist[id] = { carregando: true };
@@ -167,8 +169,7 @@ async function carregarHist(id) {
     if (my !== S.sessao) return;
     S.hist[id] = { erro: true };
   }
-  const r = rota();
-  if (r.t === 'loja' && r.id === id) atualizar();
+  if (chaveHist(rota()) === id) atualizar();
 }
 
 async function iniciar() {
@@ -220,6 +221,7 @@ function rota() {
 function entrou() {
   const r = rota();
   if (r.t === 'loja' && S.registro && lojaDe(r.id)) carregarHist(r.id);
+  if (r.t === 'smart') carregarHist('smart-' + r.id);
   if (r.t === 'nova') nova = { config: null, texto: '' };
 }
 // Re-desenha quando chegam dados novos, sem apagar o que a pessoa está digitando
@@ -285,6 +287,8 @@ function heroLoja(e, cfg) {
 function linhaHist(x) {
   if (!x || typeof x !== 'object') return '';
   const m = {
+    suspender: ['Suspendeu', x.para || ''], reativar: ['Reativou', ''],
+    senha: ['Trocou a senha de', x.para || ''], email: ['Trocou o e-mail', x.para || ''],
     renovar: ['Renovou +30 dias', `até ${L.dmy(x.para)}${x.valor != null ? ' · ' + L.fmtValor(x.valor) : ''}`],
     data: ['Mudou o vencimento', L.dmy(x.para)],
     bloqueio: ['Bloqueou', ''], desbloqueio: ['Desbloqueou', ''],
@@ -329,15 +333,27 @@ ${hero}
 }
 
 function telaSmart(id) {
-  const s = S.smart.lojas.find(x => x.lojaId === id);
+  const s = smartLoja(id);
   if (!s) return naoAchou(S.smart.estado === 'carregando' ? 'Carregando…' : 'Loja não encontrada.');
-  const membros = (s.membros || []).map(m => `<div class="hist"><div>${esc(m.nome || m.email || m.uid)}<small>${esc(m.email || '')}</small></div><div class="r" style="color:var(--muted)">${esc(m.papel || '')}</div></div>`).join('');
+  const dis = S.smart.acessoErro ? ' disabled' : '';
+  const membros = (s.membros || []).map(m => `<div class="hist"><div>${esc(m.nome || m.email || m.uid)}<small>${esc(m.email || '')}${m.papel ? ' · ' + esc(m.papel) : ''}</small></div><div class="linha-botoes"><button class="btn contorno mini" data-a="sheet-s-senha" data-id="${esc(id)}" data-u="${esc(m.uid)}">Senha</button><button class="btn contorno mini" data-a="sheet-s-email" data-id="${esc(id)}" data-u="${esc(m.uid)}">E-mail</button></div></div>`).join('');
+  const a = acessoDe(id), susp = suspensa(id);
+  let hero;
+  if (S.smart.acessoErro) hero = `<div class="erro-caixa"><p>Não consegui ler o estado de acesso dessa loja. ${/permission/i.test(S.smart.acessoErro) ? 'Sem permissão: entre com a conta de administrador do VortexSmart.' : esc(motivoLeitura({ code: S.smart.acessoErro }))}</p><button class="btn verde" data-a="recarregar-smart">Tentar de novo</button></div>`;
+  else if (susp) hero = `<div class="hero bad"><div class="rot">Acesso suspenso</div><div class="grande"><b class="txt">Suspensa</b></div><p>${esc(a.motivo || 'Sem motivo registrado.')}${a.em ? ' · desde ' + esc(quando(a.em)) : ''}</p></div>`;
+  else hero = `<div class="hero mud"><div class="rot">Acesso</div><div class="grande"><b class="txt">Ativa</b></div><p>Sem vencimento automático por enquanto.${s.plano ? ` Plano: ${esc(s.plano)}.` : ''}</p></div>`;
   return `<main class="tela sem-barra">${voltar}
 <div class="cab-loja"><div class="avatar" aria-hidden="true">${esc((s.nome || '?').trim().charAt(0).toUpperCase())}</div><div><div class="kicker">VortexSmart</div><h1>${esc(s.nome)}</h1></div></div>
-<div class="hero ${s.bloqueada ? 'bad' : 'mud'}"><div class="rot">Acesso</div><div class="grande"><b class="txt">${s.bloqueada ? 'Bloqueada' : 'Ativa'}</b></div><p>${s.bloqueada ? esc(s.bloqueioMotivo || 'Sem motivo registrado.') : 'Ainda sem vencimento automático.'}${s.plano ? ` Plano: ${esc(s.plano)}.` : ''}</p></div>
+${hero}
+<div class="grade">
+<button class="acao" data-a="sheet-s-nome" data-id="${esc(id)}">${ic('edit')}Renomear</button>
+${susp ? `<button class="acao" data-a="sheet-s-reat" data-id="${esc(id)}"${dis}>${ic('unlock')}Reativar</button>` : `<button class="acao bad" data-a="sheet-s-susp" data-id="${esc(id)}"${dis}>${ic('lock')}Suspender</button>`}
+</div>
 <h2>Usuários (${(s.membros || []).length})</h2><div class="bloco">${membros || '<div class="hist">Nenhum usuário.</div>'}</div>
-<div class="nota">Por enquanto o VortexSmart é só consulta aqui. Vencimento, bloqueio e troca de senha chegam na próxima etapa.</div></main>`;
+<h2>Histórico</h2>${blocoHist('smart-' + id)}
+<div class="nota">Vencimento automático e +30 dias do VortexSmart chegam na próxima etapa.</div></main>`;
 }
+const smartLoja = id => S.smart.lojas.find(x => x.lojaId === id);
 
 function telaAvisos() {
   return `<main class="tela"><div class="kicker">Painel Vortex</div><h1>Avisos</h1><div class="vazio">Em breve: mandar aviso para cada loja (ex.: "sua mensalidade vence amanhã").</div></main>${nav('avisos')}`;
@@ -592,6 +608,77 @@ async function buscarAtualizacao(el) {
   });
 }
 
+// ── Ações do VortexSmart (funções que já estão no servidor) ────
+const EMAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const membroDe = (id, uid) => { const s = smartLoja(id); return s && (s.membros || []).find(m => m.uid === uid); };
+
+function sheetSmartSusp(id) {
+  const s = smartLoja(id); if (!s) return;
+  abrir(`<div><h3>Suspender loja</h3><p class="sub"><b>${esc(s.nome)}</b> perde o acesso ao banco na hora e os arquivos fecham em até 1 hora. Nada é apagado. A loja vê o motivo abaixo na tela de bloqueio. Você reativa quando quiser.</p>
+<div class="campo"><label for="motivoSusp">Motivo</label><input id="motivoSusp" maxlength="300" autocomplete="off" placeholder="Ex.: mensalidade vencida" data-enter="ok-s-susp"></div>
+<p id="msg" class="status" role="alert"></p>${dupla(btnCancelar, `<button class="btn perigo" data-a="ok-s-susp" data-id="${esc(id)}">Suspender</button>`)}</div>`, '#motivoSusp');
+}
+function sheetSmartReat(id) {
+  const s = smartLoja(id); if (!s) return;
+  abrir(`<div><h3>Reativar loja</h3><p class="sub"><b>${esc(s.nome)}</b> volta a ter acesso na hora ao banco. Os arquivos liberam em até 1 hora.</p>
+<p id="msg" class="status" role="alert"></p>${dupla(btnCancelar, `<button class="btn verde" data-a="ok-s-reat" data-id="${esc(id)}">Reativar</button>`)}</div>`);
+}
+function sheetSmartNome(id) {
+  const s = smartLoja(id); if (!s) return;
+  abrir(`<div><h3>Renomear loja</h3><p class="sub">Muda o nome no VortexSmart (o cliente também vê).</p>
+<div class="campo"><label for="novoNomeS">Nome</label><input id="novoNomeS" maxlength="60" value="${esc(s.nome || '')}" autocomplete="off" data-enter="ok-s-nome"></div>
+<p id="msg" class="status" role="alert"></p>${dupla(btnCancelar, `<button class="btn verde" data-a="ok-s-nome" data-id="${esc(id)}">Salvar nome</button>`)}</div>`, '#novoNomeS');
+}
+function sheetSmartSenha(id, uid) {
+  const m = membroDe(id, uid); if (!m) return;
+  abrir(`<div><h3>Trocar senha</h3><p class="sub">${esc(m.nome || m.email)} · ${esc(m.email)}. A senha antiga para de funcionar na hora. Avise o cliente.</p>
+<div class="campo"><label for="novaSenha">Nova senha (mínimo 6)</label><input id="novaSenha" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-enter="ok-s-senha"></div>
+<p id="msg" class="status" role="alert"></p>${dupla(btnCancelar, `<button class="btn verde" data-a="ok-s-senha" data-id="${esc(id)}" data-u="${esc(uid)}">Trocar senha</button>`)}</div>`, '#novaSenha');
+}
+function sheetSmartEmail(id, uid) {
+  const m = membroDe(id, uid); if (!m) return;
+  abrir(`<div><h3>Trocar e-mail de login</h3><p class="sub">${esc(m.nome || m.email)}. O cliente passa a entrar com o novo e-mail (a senha continua a mesma).</p>
+<div class="campo"><label for="novoEmail">Novo e-mail</label><input id="novoEmail" type="email" value="${esc(m.email || '')}" autocomplete="off" autocapitalize="none" inputmode="email" data-enter="ok-s-email"></div>
+<p id="msg" class="status" role="alert"></p>${dupla(btnCancelar, `<button class="btn verde" data-a="ok-s-email" data-id="${esc(id)}" data-u="${esc(uid)}">Trocar e-mail</button>`)}</div>`, '#novoEmail');
+}
+
+// Roda a função do servidor, recarrega o estado real e só então confirma na tela
+async function acaoSmart(el, id, chamada, aviso, entrada) {
+  await rodar(el, async () => {
+    try {
+      await chamada();
+      fecharSheet(); await carregarSmart(); render(); toast(aviso);
+      if (entrada) historico('smart-' + id, entrada);
+    } catch (e) {
+      msg(textoErro(e)); carregarSmart();     // se deu timeout, não sabemos se gravou: mostra o estado real
+    }
+  });
+}
+const okSmartSusp = el => {
+  const id = el.dataset.id, motivo = sheet.querySelector('#motivoSusp').value.trim();
+  if (!motivo) return msg('Escreva o motivo.');
+  return acaoSmart(el, id, () => D.suspenderSmart(id, motivo), 'Loja suspensa', { tipo: 'suspender', para: motivo.slice(0, 90) });
+};
+const okSmartReat = el => acaoSmart(el, el.dataset.id, () => D.reativarSmart(el.dataset.id), 'Loja reativada', { tipo: 'reativar' });
+const okSmartNome = el => {
+  const id = el.dataset.id, s = smartLoja(id), n = L.validarNome(sheet.querySelector('#novoNomeS').value);
+  if (n.erro) return msg(n.erro);
+  if (s && n.nome === s.nome) return fecharSheet();
+  return acaoSmart(el, id, () => D.renomearSmart(id, n.nome), 'Nome atualizado', { tipo: 'nome', de: String((s && s.nome) || '').slice(0, 90), para: n.nome });
+};
+const okSmartSenha = el => {      // a senha nunca vai para o histórico
+  const id = el.dataset.id, uid = el.dataset.u, m = membroDe(id, uid), senha = sheet.querySelector('#novaSenha').value;
+  if (senha.length < 6) return msg('A senha precisa ter pelo menos 6 caracteres.');
+  if (senha !== senha.trim()) return msg('A senha não pode começar nem terminar com espaço.');
+  return acaoSmart(el, id, () => D.trocarSenhaSmart(uid, senha), 'Senha trocada', { tipo: 'senha', para: String((m && (m.email || m.nome)) || '').slice(0, 90) });
+};
+const okSmartEmail = el => {
+  const id = el.dataset.id, uid = el.dataset.u, m = membroDe(id, uid), novo = sheet.querySelector('#novoEmail').value.trim().toLowerCase();
+  if (!EMAIL_OK.test(novo)) return msg('E-mail inválido.');
+  if (m && novo === String(m.email || '').toLowerCase()) return fecharSheet();
+  return acaoSmart(el, id, () => D.trocarEmailSmart(uid, novo), 'E-mail trocado', { tipo: 'email', de: String((m && m.email) || '').slice(0, 90), para: novo.slice(0, 90) });
+};
+
 // Registra no histórico; falha aqui nunca desfaz a ação principal
 function historico(id, entrada) {
   D.registrarHistorico(id, limpa(Object.assign({ por: S.user && S.user.email }, entrada)))
@@ -712,6 +799,10 @@ const ACOES = {
   'sheet-nome': el => sheetNome(el.dataset.id),
   'sheet-bloq': el => sheetBloq(el.dataset.id),
   'sheet-arquivar': el => sheetArquivar(el.dataset.id),
+  'recarregar-smart': () => carregarSmart(),
+  'sheet-s-susp': el => sheetSmartSusp(el.dataset.id), 'sheet-s-reat': el => sheetSmartReat(el.dataset.id), 'sheet-s-nome': el => sheetSmartNome(el.dataset.id),
+  'sheet-s-senha': el => sheetSmartSenha(el.dataset.id, el.dataset.u), 'sheet-s-email': el => sheetSmartEmail(el.dataset.id, el.dataset.u),
+  'ok-s-susp': okSmartSusp, 'ok-s-reat': okSmartReat, 'ok-s-nome': okSmartNome, 'ok-s-senha': okSmartSenha, 'ok-s-email': okSmartEmail,
   'sheet-excluir': el => sheetExcluir(el.dataset.id), 'ok-excluir': okExcluir, 'atualizar-app': buscarAtualizacao, tema: el => escolherTema(el.dataset.t),
   'ok-renovar': okRenovar, 'ok-data': okData, 'ok-nome': okNome, 'ok-bloq': okBloq, 'ok-arquivar': okArquivar,
   testar: acaoTestar, cadastrar: acaoCadastrar,
@@ -777,7 +868,7 @@ D.observarLogin(u => {
   if (u && S.user && S.user.uid === u.uid) return;
   S.sessao++; S.user = u || null; fecharSheet();
   if (u) iniciar();
-  else { S.registro = null; S.erroRegistro = null; S.lic = {}; S.hist = {}; S.smart = { estado: 'idle', lojas: [], erro: null }; render(); }
+  else { S.registro = null; S.erroRegistro = null; S.lic = {}; S.hist = {}; S.smart = { estado: 'idle', lojas: [], erro: null, acesso: {}, acessoErro: null }; render(); }
 });
 render();
 

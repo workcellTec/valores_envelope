@@ -112,6 +112,7 @@ svg { display: block; }
 .bloco { background: var(--card); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
 .hist { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; font-size: 14px; font-weight: 700; }
 .hist + .hist { border-top: 1px solid var(--line); }
+.hist > div:first-child { min-width: 0; overflow-wrap: anywhere; }
 .hist small { display: block; font-size: 12px; font-weight: 500; color: var(--muted); }
 .hist .r { font-size: 13px; color: var(--ok); text-align: right; }
 .nota { margin-top: 14px; padding: 14px 16px; border-radius: 16px; background: var(--mud-bg); color: var(--ink); font-size: 13px; line-height: 1.5; }

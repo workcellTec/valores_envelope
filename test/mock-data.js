@@ -17,6 +17,7 @@ const db = {
     gama: { bloqueado: true, vencimento: somaDias(h, 10) },
     velha: { bloqueado: false, vencimento: somaDias(h, -4) },
   },
+  acesso: {},
   historico: { gama: [{ em: 1, tipo: 'bloqueio' }] },
   smart: [{ lojaId: 'sm1', nome: 'Smart Um', bloqueada: false, plano: 'pro', membros: [{ uid: 'u1', nome: 'Ana', email: 'ana@x.com', papel: 'gestor' }] }],
 };
@@ -73,3 +74,19 @@ export async function renovar(loja, op) {
 export async function definirVencimento(loja, v) { db.lic[loja.id] = { ...(db.lic[loja.id] || { bloqueado: false }), vencimento: v }; return { ...db.lic[loja.id] }; }
 export async function definirBloqueio(loja, b) { db.lic[loja.id] = { ...(db.lic[loja.id] || {}), bloqueado: !!b }; return { ...db.lic[loja.id] }; }
 export async function listarSmart() { return JSON.parse(JSON.stringify(db.smart)); }
+export async function lerAcessoSmart() { return JSON.parse(JSON.stringify(db.acesso)); }
+const erroFn = (msg, code = 'functions/invalid-argument') => Object.assign(new Error(msg), { code });
+const smartDe = id => db.smart.find(x => x.lojaId === id);
+export async function suspenderSmart(id, motivo) {
+  if (!motivo) throw erroFn('Descreva o motivo da suspensão.');
+  db.acesso[id] = { bloqueada: true, motivo, em: Date.now(), por: 'U1' };
+}
+export async function reativarSmart(id) { delete db.acesso[id]; }
+export async function renomearSmart(id, nome) { smartDe(id).nome = nome; }
+export async function trocarSenhaSmart(uid, senha) {
+  if (senha.length < 6) throw erroFn('A senha precisa ter pelo menos 6 caracteres.');
+  window.__senhaUsada = { uid, senha };
+}
+export async function trocarEmailSmart(uid, email) {
+  for (const s of db.smart) for (const m of s.membros) if (m.uid === uid) m.email = email;
+}

@@ -11,6 +11,7 @@ const painelAuth = getAuth(painel);
 const painelDb = getDatabase(painel);
 const smart = initializeApp(SMART_CONFIG, 'smart');
 const smartAuth = getAuth(smart);
+const smartDb = getDatabase(smart);
 const smartFn = getFunctions(smart);
 
 // ── Utilidades ─────────────────────────────────────────────────
@@ -147,10 +148,30 @@ async function gravarERele(loja, dados) {
 export const definirVencimento = (loja, vencimento) => gravarERele(loja, { vencimento });
 export const definirBloqueio = (loja, bloqueado) => gravarERele(loja, { bloqueado: !!bloqueado });
 
-// ── VortexSmart (somente leitura na fase 1) ────────────────────
-export async function listarSmart() {
+// ── VortexSmart ────────────────────
+async function loginSmart() {
   await smartAuth.authStateReady();   // ao abrir o app, a sessão salva do VortexSmart ainda está sendo restaurada
-  if (!smartAuth.currentUser) throw Object.assign(new Error('Sem login no VortexSmart.'), { code: 'sem-login' });
-  const r = await comTimeout(httpsCallable(smartFn, 'adminListarLojas')(), 20000);
-  return (r.data && r.data.lojas) || [];
+  if (!smartAuth.currentUser) throw Object.assign(new Error('Sem login no VortexSmart. Saia e entre de novo.'), { code: 'sem-login' });
 }
+async function chamarSmart(nome, dados, ms) {
+  await loginSmart();
+  const r = await comTimeout(httpsCallable(smartFn, nome)(dados), ms || 60000);
+  return r.data || {};
+}
+
+export async function listarSmart() { return (await chamarSmart('adminListarLojas', undefined, 20000)).lojas || []; }
+
+// Estado real do bloqueio: acessoLojas/{lojaId} existe com bloqueada === true → suspensa; não existe → liberada.
+// (o administrador tem leitura desse nó nas regras do VortexSmart)
+export async function lerAcessoSmart() {
+  await loginSmart();
+  const snap = await comTimeout(get(ref(smartDb, 'acessoLojas')), 15000);
+  return snap.exists() ? snap.val() : {};
+}
+
+// Funções que já existem no servidor do VortexSmart. Todas são seguras de repetir.
+export const suspenderSmart = (lojaId, motivo) => chamarSmart('adminSuspenderLoja', { lojaId, motivo });
+export const reativarSmart = lojaId => chamarSmart('adminReativarLoja', { lojaId });
+export const renomearSmart = (lojaId, novoNome) => chamarSmart('adminEditarNomeLoja', { lojaId, novoNome });
+export const trocarSenhaSmart = (uid, novaSenha) => chamarSmart('adminResetarSenhaUsuario', { uid, novaSenha });
+export const trocarEmailSmart = (uid, novoEmail) => chamarSmart('adminEditarEmailUsuario', { uid, novoEmail });
